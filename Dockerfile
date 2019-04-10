@@ -1,4 +1,4 @@
-FROM golang:1.11.1 AS build
+FROM golang:1.12.1 AS build
 WORKDIR /mnt
 COPY . .
 RUN CGO_ENABLED=0 go build -o ./bin/rw main.go
