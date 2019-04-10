@@ -12,18 +12,18 @@ type Store interface {
 }
 
 type FireStore struct {
-	ProjectId     string
+	ProjectID     string
 	Collection    string
 	CollectionRef *firestore.CollectionRef
 }
 
-func NewFireStore(projectId, collection string) *FireStore {
-	client, err := firestore.NewClient(context.Background(), projectId)
+func NewFireStore(projectID, collection string) *FireStore {
+	client, err := firestore.NewClient(context.Background(), projectID)
 	if err != nil {
 		panic(err)
 	}
 	return &FireStore{
-		ProjectId:     projectId,
+		ProjectID:     projectID,
 		Collection:    collection,
 		CollectionRef: client.Collection(collection),
 	}

@@ -1,0 +1,22 @@
+{
+  "fire_store_config": {
+    "project_id": "test",
+    "collection": "xss"
+  },
+  "ding_config": {
+    "token": "ding ding bot token"
+  },
+  "mail_config": {
+    "domain": "mail gun domain",
+    "private_key": "mail gun private key",
+    "from": "mail from",
+    "to": "mail to"
+  },
+  "watcher_configs": [
+    {
+      "source": "https://draveness.me/feed.xml",
+      "notifiers": ["ding", "mail"],
+      "interval": "12h"
+    }
+  ]
+}

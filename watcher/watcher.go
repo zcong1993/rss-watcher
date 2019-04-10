@@ -11,14 +11,7 @@ import (
 	"github.com/zcong1993/rss-watcher/kv"
 )
 
-type IWatcher interface {
-}
-
-type Config struct {
-}
-
 type RSSWatcher struct {
-	config    Config
 	source    string
 	md5Source string
 	store     kv.Store
@@ -66,6 +59,7 @@ func (rw *RSSWatcher) Close() {
 }
 
 func (rw *RSSWatcher) handle() error {
+	fmt.Printf("run tick %s\n", time.Now().String())
 	feed, err := rw.parser.ParseURL(rw.source)
 	if err != nil {
 		return err

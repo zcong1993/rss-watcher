@@ -36,3 +36,5 @@ coverage.txt
 dist
 
 .envc
+
+config.json
