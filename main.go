@@ -44,7 +44,7 @@ func main() {
 		rw := rw
 
 		go func() {
-			watcherClient := watcher.NewRSSWatcher(rw.Source, rw.Interval.Duration, kvStore, notifiers)
+			watcherClient := watcher.NewRSSWatcher(rw.Source, rw.Interval.Duration, kvStore, notifiers, rw.Skip)
 			watcherClient.Run()
 		}()
 	}

@@ -60,6 +60,7 @@ type WatcherConfig struct {
 	Source    string    `json:"source" validate:"required"`
 	Interval  *Duration `json:"interval" validate:"required"`
 	Notifiers []string  `json:"notifiers" validate:"gt=0,dive,oneof=ding mail"`
+	Skip      int       `json:"skip" validate:"omitempty,gte=0"`
 }
 
 type FireStoreConfig struct {

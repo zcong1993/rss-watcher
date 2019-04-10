@@ -10,6 +10,6 @@ require (
 	github.com/leodido/go-urn v1.1.0 // indirect
 	github.com/mmcdole/gofeed v1.0.0-beta2
 	github.com/mmcdole/goxpp v0.0.0-20181012175147-0068e33feabf // indirect
-	github.com/zcong1993/notifiers v0.0.0-20190409173030-aa4229cb1d65
+	github.com/zcong1993/notifiers v0.0.0-20190410173303-86c962bbf891
 	gopkg.in/go-playground/validator.v9 v9.28.0
 )

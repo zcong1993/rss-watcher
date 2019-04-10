@@ -2,6 +2,7 @@ package watcher
 
 import (
 	"crypto/md5"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -15,13 +16,14 @@ type RSSWatcher struct {
 	source    string
 	md5Source string
 	store     kv.Store
+	skip      int
 	notifiers []types.Notifier
 	interval  time.Duration
 	closeCh   chan struct{}
 	parser    *gofeed.Parser
 }
 
-func NewRSSWatcher(source string, interval time.Duration, store kv.Store, notifiers []types.Notifier) *RSSWatcher {
+func NewRSSWatcher(source string, interval time.Duration, store kv.Store, notifiers []types.Notifier, skip int) *RSSWatcher {
 	return &RSSWatcher{
 		source:    source,
 		interval:  interval,
@@ -30,6 +32,7 @@ func NewRSSWatcher(source string, interval time.Duration, store kv.Store, notifi
 		notifiers: notifiers,
 		closeCh:   make(chan struct{}),
 		parser:    gofeed.NewParser(),
+		skip:      skip,
 	}
 }
 
@@ -70,11 +73,25 @@ func (rw *RSSWatcher) handle() error {
 	if err != nil && !strings.Contains(err.Error(), "code = NotFound") {
 		return err
 	}
+
+	feedItems := feed.Items
+
+	if rw.skip > 0 {
+		if len(feedItems) < rw.skip {
+			return errors.New("feed length less than skip")
+		}
+		feedItems = feed.Items[rw.skip:]
+	}
+
 	if err != nil {
-		items = append(items, feed.Items[0])
+		items = append(items, feedItems[0])
 	} else {
-		for _, item := range feed.Items {
+		for i, item := range feedItems {
 			if item.GUID == last.GUID {
+				break
+			}
+			if i > 4 {
+				// max 5 items
 				break
 			}
 			items = append(items, item)
@@ -90,9 +107,10 @@ func (rw *RSSWatcher) handle() error {
 		})
 
 		for _, notifier := range rw.notifiers {
+			fmt.Printf("notifier %s notify msg\n", notifier.GetName())
 			err := notifier.Notify(msg)
 			if err != nil {
-				fmt.Printf("notify error: %+v\n", err)
+				fmt.Printf("notify %s error: %+v\n", notifier.GetName(), err)
 			}
 		}
 	}

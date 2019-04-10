@@ -16,7 +16,8 @@
     {
       "source": "https://draveness.me/feed.xml",
       "notifiers": ["ding", "mail"],
-      "interval": "12h"
+      "interval": "12h",
+      "skip": 1
     }
   ]
 }
