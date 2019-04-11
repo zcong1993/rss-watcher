@@ -61,6 +61,7 @@ github.com/konsorten/go-windows-terminal-sequences v1.0.1/go.mod h1:T0+1ngSBFLxv
 github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515/go.mod h1:+0opPa2QZZtGFBFZlji/RkVcI2GknAs/DXo4wKdlNEc=
 github.com/leodido/go-urn v1.1.0 h1:Sm1gr51B1kKyfD2BlRcLSiEkffoG96g6TPv6eRoEiB8=
 github.com/leodido/go-urn v1.1.0/go.mod h1:+cyI34gQWZcE1eQU7NVgKkkzdXDQHr1dBMtdAPozLkw=
+github.com/lunny/html2md v0.0.0-20181018071239-7d234de44546/go.mod h1:lUUaVYlpAQ1Oo6vIZfec6CXQZjOvFZLyqaR8Dl7m+hk=
 github.com/mailgun/mailgun-go/v3 v3.3.3 h1:poQA6319cv477gzfM557GYtxP4hzay1vK4eFUxLEazE=
 github.com/mailgun/mailgun-go/v3 v3.3.3/go.mod h1:E81I5Agcfi/u1szdehi6p6ttdRX/UD3Rq2SrUzwyFIU=
 github.com/mailru/easyjson v0.0.0-20180823135443-60711f1a8329 h1:2gxZ0XQIU/5z3Z3bUBu+FXuk2pFbkN6tcwi/pjyaDic=
@@ -101,6 +102,8 @@ github.com/zcong1993/notifiers v0.0.0-20190410173303-86c962bbf891 h1:fpT2BQh9zE4
 github.com/zcong1993/notifiers v0.0.0-20190410173303-86c962bbf891/go.mod h1:aImL/EV02EMMmsE+uxVZFLpWk9FR7atdOzk7qyybsjs=
 github.com/zcong1993/notifiers v0.0.0-20190411120146-c6427e9db930 h1:SwfttF586qSJ59prSpPIt+jgUII4YenTv5ziK/BMKtA=
 github.com/zcong1993/notifiers v0.0.0-20190411120146-c6427e9db930/go.mod h1:aImL/EV02EMMmsE+uxVZFLpWk9FR7atdOzk7qyybsjs=
+github.com/zcong1993/notifiers v0.0.0-20190411121609-b2a7b1c814c2 h1:TWJYYce6gXG9k3r3/LP1h8DL+25nE2wgk8CVGeFuPz8=
+github.com/zcong1993/notifiers v0.0.0-20190411121609-b2a7b1c814c2/go.mod h1:9GM7bNTie0B9rUihC4sz3cA8TXWeYoO2sjOVRtm3aA8=
 go.opencensus.io v0.20.1 h1:pMEjRZ1M4ebWGikflH7nQpV6+Zr88KBMA2XJD3sbijw=
 go.opencensus.io v0.20.1/go.mod h1:6WKK9ahsWS3RSO+PY9ZHZUfv2irvY6gN279GOPZjmmk=
 golang.org/x/crypto v0.0.0-20180904163835-0709b304e793/go.mod h1:6SG95UA2DQfeDnfUPMdvaQW0Q7yPrPDi9nlGo2tz2b4=
