@@ -107,8 +107,9 @@ func (rw *RSSWatcher) handle() error {
 		})
 
 		for _, notifier := range rw.notifiers {
+			msgCp := msg.Clone()
 			fmt.Printf("notifier %s notify msg\n", notifier.GetName())
-			err := notifier.Notify(msg)
+			err := notifier.Notify(msgCp)
 			if err != nil {
 				fmt.Printf("notify %s error: %+v\n", notifier.GetName(), err)
 			}
