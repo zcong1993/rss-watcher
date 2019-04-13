@@ -6,11 +6,6 @@ import (
 	"cloud.google.com/go/firestore"
 )
 
-type Store interface {
-	Get(key string, value interface{}) error
-	Set(key string, value interface{}) error
-}
-
 type FireStore struct {
 	ProjectID     string
 	Collection    string
