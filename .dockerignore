@@ -38,3 +38,4 @@ dist
 .envc
 
 config.json
+kv.json

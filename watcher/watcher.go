@@ -70,7 +70,7 @@ func (rw *RSSWatcher) handle() error {
 	var items []*gofeed.Item
 	var last gofeed.Item
 	err = rw.store.Get(rw.md5Source, &last)
-	if err != nil && !strings.Contains(err.Error(), "code = NotFound") {
+	if err != nil && !strings.Contains(err.Error(), "NotFound") {
 		return err
 	}
 

@@ -39,10 +39,12 @@ func (d *Duration) UnmarshalJSON(b []byte) error {
 }
 
 type Config struct {
-	DingConfig      *DingConfig      `json:"ding_config" validate:"omitempty,dive"`
-	MailConfig      *MailConfig      `json:"mail_config" validate:"omitempty,dive"`
-	FireStoreConfig *FireStoreConfig `json:"fire_store_config" validate:"required,dive"`
-	WatcherConfigs  []WatcherConfig  `json:"watcher_configs" validate:"gt=0,dive"`
+	DingConfig          *DingConfig      `json:"ding_config" validate:"omitempty,dive"`
+	MailConfig          *MailConfig      `json:"mail_config" validate:"omitempty,dive"`
+	KvStore             string           `json:"kv_store" validate:"required,oneof=mem file firestore"`
+	FileStoreConfigPath string           `json:"file_store_config_path" validate:"omitempty"`
+	FireStoreConfig     *FireStoreConfig `json:"fire_store_config" validate:"omitempty,dive"`
+	WatcherConfigs      []WatcherConfig  `json:"watcher_configs" validate:"gt=0,dive"`
 }
 
 type DingConfig struct {
@@ -108,6 +110,16 @@ func validateConfig(c *Config) {
 			if c.MailConfig == nil {
 				panic("mail config is required")
 			}
+		}
+	}
+	switch c.KvStore {
+	case "file":
+		if c.FileStoreConfigPath == "" {
+			panic("file_store_config_path is required when kv_store is file")
+		}
+	case "firestore":
+		if c.FireStoreConfig == nil {
+			panic("fire_store_config is required when kv_store is firestore")
 		}
 	}
 }

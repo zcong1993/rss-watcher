@@ -7,4 +7,5 @@ type Store interface {
 	Set(key string, value interface{}) error
 }
 
-var ErrNotFound = errors.New("NOT_FOUND")
+// nolint
+var ErrNotFound = errors.New("NotFound")

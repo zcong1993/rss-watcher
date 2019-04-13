@@ -22,7 +22,15 @@ func main() {
 		dingNotifier types.Notifier
 		mailNotifier types.Notifier
 	)
-	kvStore = kv.NewFireStore(cfg.FireStoreConfig.ProjectID, cfg.FireStoreConfig.Collection)
+	switch cfg.KvStore {
+	case "mem":
+		kvStore = kv.NewMemStore()
+	case "file":
+		kvStore = kv.NewFileStore(cfg.FileStoreConfigPath)
+	case "firestore":
+		kvStore = kv.NewFireStore(cfg.FireStoreConfig.ProjectID, cfg.FireStoreConfig.Collection)
+	}
+
 	if cfg.DingConfig != nil {
 		dingNotifier = ding.NewClient(cfg.DingConfig.Token)
 	}

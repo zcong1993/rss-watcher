@@ -3,6 +3,8 @@
     "project_id": "test",
     "collection": "xss"
   },
+  "kv_store": "mem | firestore | file",
+  "file_store_config_path": "./kv.json",
   "ding_config": {
     "token": "ding ding bot token"
   },
