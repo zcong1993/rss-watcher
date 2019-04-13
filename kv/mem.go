@@ -1,12 +1,8 @@
 package kv
 
 import (
-	"errors"
-
 	"github.com/jinzhu/copier"
 )
-
-var ErrNotFound = errors.New("NOT_FOUND")
 
 type MemStore struct {
 	store map[string]interface{}
