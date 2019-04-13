@@ -2,45 +2,27 @@ package kv
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"os"
+
+	"github.com/jinzhu/copier"
 )
 
 type FileStore struct {
-	file  *os.File
-	store map[string]string
+	p     string
+	store map[string]interface{}
 }
 
 func NewFileStore(p string) *FileStore {
 	if _, err := os.Stat(p); os.IsNotExist(err) {
 		f, _ := os.Create(p)
-		return &FileStore{
-			file:  f,
-			store: make(map[string]string),
-		}
+		_, _ = f.Write([]byte("{}"))
+		_ = f.Close()
 	}
 
-	f, _ := os.Open(p)
-	fileinfo, err := f.Stat()
-	if err != nil {
-		panic(err)
-	}
-
-	filesize := fileinfo.Size()
-	buffer := make([]byte, filesize)
-
-	_, err = f.Read(buffer)
-	if err != nil {
-		panic(err)
-	}
-
-	var store map[string]string
-	err = json.Unmarshal(buffer, &store)
-	if err != nil {
-		panic(err)
-	}
 	return &FileStore{
-		file:  f,
-		store: store,
+		p:     p,
+		store: make(map[string]interface{}),
 	}
 }
 
@@ -49,20 +31,15 @@ func (fs *FileStore) Get(key string, value interface{}) error {
 	if !ok {
 		return ErrNotFound
 	}
-	return json.Unmarshal([]byte(v), value)
+	return copier.Copy(value, v)
 }
 
 func (fs *FileStore) Set(key string, value interface{}) error {
-	bt, err := json.Marshal(value)
-	if err != nil {
-		return err
-	}
-	fs.store[key] = string(bt)
+	fs.store[key] = value
 	storeBt, err := json.Marshal(fs.store)
 	if err != nil {
 		return err
 	}
 
-	_, err = fs.file.Write(storeBt)
-	return err
+	return ioutil.WriteFile(fs.p, storeBt, 0644)
 }
