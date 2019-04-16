@@ -3,6 +3,8 @@ package main
 import (
 	"os"
 
+	"github.com/zcong1993/notifiers/adapters/tg"
+
 	"github.com/zcong1993/notifiers/adapters/ding"
 	"github.com/zcong1993/notifiers/adapters/mail"
 	"github.com/zcong1993/notifiers/types"
@@ -21,6 +23,7 @@ func main() {
 		kvStore      kv.Store
 		dingNotifier types.Notifier
 		mailNotifier types.Notifier
+		tgNotifier   types.Notifier
 	)
 	switch cfg.KvStore {
 	case "mem":
@@ -37,6 +40,9 @@ func main() {
 	if cfg.MailConfig != nil {
 		mailNotifier = mail.NewClient(cfg.MailConfig.Domain, cfg.MailConfig.PrivateKey, cfg.MailConfig.To, cfg.MailConfig.From)
 	}
+	if cfg.TelegramConfig != nil {
+		tgNotifier = tg.NewClient(cfg.TelegramConfig.Token, cfg.TelegramConfig.ToID)
+	}
 
 	for _, rw := range cfg.WatcherConfigs {
 		notifiers := make([]types.Notifier, 0)
@@ -46,6 +52,8 @@ func main() {
 				notifiers = append(notifiers, mailNotifier)
 			case "ding":
 				notifiers = append(notifiers, dingNotifier)
+			case "tg":
+				notifiers = append(notifiers, tgNotifier)
 			}
 		}
 

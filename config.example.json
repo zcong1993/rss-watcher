@@ -14,10 +14,14 @@
     "from": "mail from",
     "to": "mail to"
   },
+  "telegram_config": {
+    "token": "tg bot api token",
+    "to_id": -100
+  },
   "watcher_configs": [
     {
       "source": "https://draveness.me/feed.xml",
-      "notifiers": ["ding", "mail"],
+      "notifiers": ["ding", "mail", "tg"],
       "interval": "12h",
       "skip": 1
     }

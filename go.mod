@@ -12,6 +12,6 @@ require (
 	github.com/mmcdole/gofeed v1.0.0-beta2
 	github.com/mmcdole/goxpp v0.0.0-20181012175147-0068e33feabf // indirect
 	github.com/stretchr/testify v1.2.2
-	github.com/zcong1993/notifiers v0.0.0-20190412081219-6f4d8457b9dc
+	github.com/zcong1993/notifiers v0.0.0-20190416074313-bfbd4f78b7a9
 	gopkg.in/go-playground/validator.v9 v9.28.0
 )

@@ -41,9 +41,10 @@ func (d *Duration) UnmarshalJSON(b []byte) error {
 type Config struct {
 	DingConfig          *DingConfig      `json:"ding_config" validate:"omitempty,dive"`
 	MailConfig          *MailConfig      `json:"mail_config" validate:"omitempty,dive"`
+	FireStoreConfig     *FireStoreConfig `json:"fire_store_config" validate:"omitempty,dive"`
+	TelegramConfig      *TelegramConfig  `json:"telegram_config" validate:"omitempty,dive"`
 	KvStore             string           `json:"kv_store" validate:"required,oneof=mem file firestore"`
 	FileStoreConfigPath string           `json:"file_store_config_path" validate:"omitempty"`
-	FireStoreConfig     *FireStoreConfig `json:"fire_store_config" validate:"omitempty,dive"`
 	WatcherConfigs      []WatcherConfig  `json:"watcher_configs" validate:"gt=0,dive"`
 }
 
@@ -61,8 +62,13 @@ type MailConfig struct {
 type WatcherConfig struct {
 	Source    string    `json:"source" validate:"required"`
 	Interval  *Duration `json:"interval" validate:"required"`
-	Notifiers []string  `json:"notifiers" validate:"gt=0,dive,oneof=ding mail"`
+	Notifiers []string  `json:"notifiers" validate:"gt=0,dive,oneof=ding mail tg"`
 	Skip      int       `json:"skip" validate:"omitempty,gte=0"`
+}
+
+type TelegramConfig struct {
+	Token string `json:"token" validate:"required"`
+	ToID  int64  `json:"to_id" validate:"required"`
 }
 
 type FireStoreConfig struct {
@@ -97,6 +103,8 @@ func validateConfig(c *Config) {
 				notifiers["ding"] = struct{}{}
 			case "mail":
 				notifiers["mail"] = struct{}{}
+			case "tg":
+				notifiers["tg"] = struct{}{}
 			}
 		}
 	}
@@ -109,6 +117,10 @@ func validateConfig(c *Config) {
 		case "mail":
 			if c.MailConfig == nil {
 				panic("mail config is required")
+			}
+		case "tg":
+			if c.TelegramConfig == nil {
+				panic("telegram config is required")
 			}
 		}
 	}
