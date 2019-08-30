@@ -23,6 +23,9 @@ func main() {
 		configFile = "./config.json"
 	}
 	cfg := config.LoadConfigFromFile(configFile)
+
+	fmt.Printf("use kv store: %s\n", cfg.KvStore)
+
 	var (
 		kvStore      kv.Store
 		dingNotifier types.Notifier
