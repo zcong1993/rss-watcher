@@ -6,8 +6,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@master
-    - name: Docker Build
-      run: docker build -t zcong/rss-watcher .
     - name: Publish Docker
       uses: elgohr/Publish-Docker-Github-Action@1.10
       with:

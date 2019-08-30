@@ -1,5 +1,7 @@
 FROM golang:1.12.1 AS build
 WORKDIR /mnt
+ADD go.mod go.sum ./
+RUN go mod download
 COPY . .
 RUN CGO_ENABLED=0 go build -o ./bin/rw main.go
 
