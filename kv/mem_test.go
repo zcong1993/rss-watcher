@@ -27,3 +27,21 @@ func TestMemStore_Set(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, "string", val)
 }
+
+func TestMemStore_Complex(t *testing.T) {
+	ms := kv.NewMemStore()
+	type person struct {
+		Name string
+		Age  int
+	}
+	p := person{
+		Name: "test",
+		Age:  18,
+	}
+	err := ms.Set("p", p)
+	assert.Nil(t, err)
+	var pp person
+	err = ms.Get("p", &pp)
+	assert.Nil(t, err)
+	assert.Equal(t, p, pp)
+}
