@@ -36,6 +36,15 @@ func NewRSSWatcher(source string, interval time.Duration, store kv.Store, notifi
 	}
 }
 
+func (rw *RSSWatcher) Single() error {
+	err := rw.handle()
+	if err != nil {
+		fmt.Printf("rss watcher handle error: %+v\n", err)
+		return err
+	}
+	return nil
+}
+
 func (rw *RSSWatcher) Run() {
 	t := time.NewTicker(rw.interval)
 	defer t.Stop()

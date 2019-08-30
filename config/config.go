@@ -46,6 +46,7 @@ type Config struct {
 	KvStore             string           `json:"kv_store" validate:"required,oneof=mem file firestore"`
 	FileStoreConfigPath string           `json:"file_store_config_path" validate:"omitempty"`
 	WatcherConfigs      []WatcherConfig  `json:"watcher_configs" validate:"gt=0,dive"`
+	Single              bool             `json:"single" validate:"omitempty"`
 }
 
 type DingConfig struct {

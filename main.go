@@ -1,7 +1,11 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"os"
+
+	"golang.org/x/sync/errgroup"
 
 	"github.com/zcong1993/notifiers/adapters/tg"
 
@@ -44,27 +48,58 @@ func main() {
 		tgNotifier = tg.NewClient(cfg.TelegramConfig.Token, cfg.TelegramConfig.ToID)
 	}
 
-	for _, rw := range cfg.WatcherConfigs {
-		notifiers := make([]types.Notifier, 0)
-		for _, t := range rw.Notifiers {
-			switch t {
-			case "mail":
-				notifiers = append(notifiers, mailNotifier)
-			case "ding":
-				notifiers = append(notifiers, dingNotifier)
-			case "tg":
-				notifiers = append(notifiers, tgNotifier)
+	// run single
+	if cfg.Single {
+		fmt.Println("run single and exit.")
+		g, _ := errgroup.WithContext(context.Background())
+		for _, rw := range cfg.WatcherConfigs {
+			notifiers := make([]types.Notifier, 0)
+			for _, t := range rw.Notifiers {
+				switch t {
+				case "mail":
+					notifiers = append(notifiers, mailNotifier)
+				case "ding":
+					notifiers = append(notifiers, dingNotifier)
+				case "tg":
+					notifiers = append(notifiers, tgNotifier)
+				}
 			}
+
+			rw := rw
+
+			g.Go(func() error {
+				watcherClient := watcher.NewRSSWatcher(rw.Source, rw.Interval.Duration, kvStore, notifiers, rw.Skip)
+				return watcherClient.Single()
+			})
 		}
 
-		rw := rw
+		if err := g.Wait(); err != nil {
+			os.Exit(1)
+		}
+	} else {
+		// run as daemon
+		for _, rw := range cfg.WatcherConfigs {
+			notifiers := make([]types.Notifier, 0)
+			for _, t := range rw.Notifiers {
+				switch t {
+				case "mail":
+					notifiers = append(notifiers, mailNotifier)
+				case "ding":
+					notifiers = append(notifiers, dingNotifier)
+				case "tg":
+					notifiers = append(notifiers, tgNotifier)
+				}
+			}
 
-		go func() {
-			watcherClient := watcher.NewRSSWatcher(rw.Source, rw.Interval.Duration, kvStore, notifiers, rw.Skip)
-			watcherClient.Run()
-		}()
+			rw := rw
+
+			go func() {
+				watcherClient := watcher.NewRSSWatcher(rw.Source, rw.Interval.Duration, kvStore, notifiers, rw.Skip)
+				watcherClient.Run()
+			}()
+		}
+
+		forever := make(chan struct{})
+		<-forever
 	}
-
-	forever := make(chan struct{})
-	<-forever
 }

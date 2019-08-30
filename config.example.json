@@ -25,5 +25,6 @@
       "interval": "12h",
       "skip": 1
     }
-  ]
+  ],
+  "single": false
 }
