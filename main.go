@@ -39,6 +39,8 @@ func main() {
 		kvStore = kv.NewFileStore(cfg.FileStoreConfigPath)
 	case "firestore":
 		kvStore = kv.NewFireStore(cfg.FireStoreConfig.ProjectID, cfg.FireStoreConfig.Collection)
+	case "dynamo-kv":
+		kvStore = kv.NewDynamoKvClient(cfg.DynamoConfig.Namespace, cfg.DynamoConfig.Token)
 	}
 
 	if cfg.DingConfig != nil {

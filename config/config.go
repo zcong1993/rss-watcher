@@ -43,8 +43,9 @@ type Config struct {
 	MailConfig          *MailConfig      `json:"mail_config" validate:"omitempty,dive"`
 	FireStoreConfig     *FireStoreConfig `json:"fire_store_config" validate:"omitempty,dive"`
 	TelegramConfig      *TelegramConfig  `json:"telegram_config" validate:"omitempty,dive"`
-	KvStore             string           `json:"kv_store" validate:"required,oneof=mem file firestore"`
+	KvStore             string           `json:"kv_store" validate:"required,oneof=mem file firestore dynamo-kv"`
 	FileStoreConfigPath string           `json:"file_store_config_path" validate:"omitempty"`
+	DynamoConfig        *DynamoKvConfig  `json:"dynamo_config" validate:"omitempty,dive"`
 	WatcherConfigs      []WatcherConfig  `json:"watcher_configs" validate:"gt=0,dive"`
 	Single              bool             `json:"single" validate:"omitempty"`
 }
@@ -75,6 +76,11 @@ type TelegramConfig struct {
 type FireStoreConfig struct {
 	ProjectID  string `json:"project_id" validate:"required"`
 	Collection string `json:"collection" validate:"required"`
+}
+
+type DynamoKvConfig struct {
+	Token     string `json:"token" validate:"required"`
+	Namespace string `json:"namespace" validate:"required"`
 }
 
 func LoadConfigFromFile(f string) *Config {
@@ -133,6 +139,10 @@ func validateConfig(c *Config) {
 	case "firestore":
 		if c.FireStoreConfig == nil {
 			panic("fire_store_config is required when kv_store is firestore")
+		}
+	case "dynamo-kv":
+		if c.DynamoConfig == nil {
+			panic("dynamo_config is required when kv_store is dynamo-kv")
 		}
 	}
 }
