@@ -6,12 +6,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@master
-#    - name: Publish Docker
-#      uses: elgohr/Publish-Docker-Github-Action@1.10
-#      with:
-#        name: zcong/rss-watcher
-#        username: zcong
-#        password: ${{ secrets.DOCKER_PASSWORD }}
+    - name: Publish Docker
+      uses: elgohr/Publish-Docker-Github-Action@1.10
+      with:
+        name: zcong/rss-watcher
+        username: zcong
+        password: ${{ secrets.DOCKER_PASSWORD }}
     - name: Publish to Github Registry
       uses: elgohr/Publish-Docker-Github-Action@1.10
       with:
