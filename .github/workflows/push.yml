@@ -10,6 +10,14 @@ jobs:
       uses: elgohr/Publish-Docker-Github-Action@1.10
       with:
         name: zcong/rss-watcher
-        username: ${{ secrets.DOCKER_USERNAME }}
+        username: zcong
         password: ${{ secrets.DOCKER_PASSWORD }}
         cache: true
+    - name: Publish to Github Registry
+        uses: elgohr/Publish-Docker-Github-Action@1.10
+        with:
+          name: zcong1993/rss-watcher
+          username: zcong1993
+          password: ${{ secrets.GITHUB_REGISTRY_TOKEN }}
+          registry: docker.pkg.github.com
+          cache: true
