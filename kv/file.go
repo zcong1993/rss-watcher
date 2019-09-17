@@ -47,7 +47,8 @@ func (fs *FileStore) Get(key string, value interface{}) error {
 }
 
 func (fs *FileStore) Set(key string, value interface{}) error {
-	fs.store[key] = value.(gofeed.Item)
+	// value is *gofeed.Item type
+	fs.store[key] = *(value.(*gofeed.Item))
 	storeBt, err := json.Marshal(fs.store)
 	if err != nil {
 		return err
