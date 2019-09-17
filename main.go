@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/zcong1993/rss-watcher/notifiers/printer"
+
 	"golang.org/x/sync/errgroup"
 
 	"github.com/zcong1993/notifiers/adapters/tg"
@@ -67,6 +69,8 @@ func main() {
 					notifiers = append(notifiers, dingNotifier)
 				case "tg":
 					notifiers = append(notifiers, tgNotifier)
+				case "printer":
+					notifiers = append(notifiers, printer.NewPrinter(os.Stderr))
 				}
 			}
 

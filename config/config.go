@@ -64,7 +64,7 @@ type MailConfig struct {
 type WatcherConfig struct {
 	Source    string    `json:"source" validate:"required"`
 	Interval  *Duration `json:"interval" validate:"required"`
-	Notifiers []string  `json:"notifiers" validate:"gt=0,dive,oneof=ding mail tg"`
+	Notifiers []string  `json:"notifiers" validate:"gt=0,dive,oneof=ding mail tg printer"`
 	Skip      int       `json:"skip" validate:"omitempty,gte=0"`
 }
 
@@ -112,6 +112,8 @@ func validateConfig(c *Config) {
 				notifiers["mail"] = struct{}{}
 			case "tg":
 				notifiers["tg"] = struct{}{}
+			case "printer":
+				notifiers["printer"] = struct{}{}
 			}
 		}
 	}
