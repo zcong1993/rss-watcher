@@ -1,13 +1,11 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"os"
+	"sync"
 
 	"github.com/zcong1993/rss-watcher/notifiers/printer"
-
-	"golang.org/x/sync/errgroup"
 
 	"github.com/zcong1993/notifiers/adapters/tg"
 
@@ -58,7 +56,7 @@ func main() {
 	// run single
 	if cfg.Single {
 		fmt.Println("run single and exit.")
-		g, _ := errgroup.WithContext(context.Background())
+		wg := sync.WaitGroup{}
 		for _, rw := range cfg.WatcherConfigs {
 			notifiers := make([]types.Notifier, 0)
 			for _, t := range rw.Notifiers {
@@ -76,15 +74,16 @@ func main() {
 
 			rw := rw
 
-			g.Go(func() error {
+			wg.Add(1)
+			go func() {
 				watcherClient := watcher.NewRSSWatcher(rw.Source, rw.Interval.Duration, kvStore, notifiers, rw.Skip)
-				return watcherClient.Single()
-			})
+				_ = watcherClient.Single()
+				wg.Done()
+			}()
 		}
 
-		if err := g.Wait(); err != nil {
-			os.Exit(1)
-		}
+		wg.Wait()
+		fmt.Println("\nDone!")
 	} else {
 		// run as daemon
 		for _, rw := range cfg.WatcherConfigs {

@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 	"time"
 
@@ -24,6 +25,8 @@ type RSSWatcher struct {
 }
 
 func NewRSSWatcher(source string, interval time.Duration, store kv.Store, notifiers []types.Notifier, skip int) *RSSWatcher {
+	parser := gofeed.NewParser()
+	parser.Client = &http.Client{Timeout: time.Second * 5}
 	return &RSSWatcher{
 		source:    source,
 		interval:  interval,
@@ -31,7 +34,7 @@ func NewRSSWatcher(source string, interval time.Duration, store kv.Store, notifi
 		md5Source: fmt.Sprintf("%x", md5.Sum([]byte(source))),
 		notifiers: notifiers,
 		closeCh:   make(chan struct{}),
-		parser:    gofeed.NewParser(),
+		parser:    parser,
 		skip:      skip,
 	}
 }
