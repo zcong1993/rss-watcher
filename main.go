@@ -40,7 +40,7 @@ func main() {
 	case "firestore":
 		kvStore = kv.NewFireStore(cfg.FireStoreConfig.ProjectID, cfg.FireStoreConfig.Collection)
 	case "dynamo-kv":
-		kvStore = kv.NewDynamoKvClient(cfg.DynamoConfig.Namespace, cfg.DynamoConfig.Token)
+		kvStore = kv.NewDynamoKvClient(cfg.DynamoConfig.Token)
 	}
 
 	if cfg.DingConfig != nil {

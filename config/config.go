@@ -79,8 +79,7 @@ type FireStoreConfig struct {
 }
 
 type DynamoKvConfig struct {
-	Token     string `json:"token" validate:"required"`
-	Namespace string `json:"namespace" validate:"required"`
+	Token string `json:"token" validate:"required"`
 }
 
 func LoadConfigFromFile(f string) *Config {
