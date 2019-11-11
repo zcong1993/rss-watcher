@@ -13,6 +13,14 @@ import (
 	"github.com/zcong1993/rss-watcher/kv"
 )
 
+func normalizeContent(content string, length int) string {
+	sl := len(content)
+	if sl <= length {
+		return content
+	}
+	return content[:length] + "..."
+}
+
 type RSSWatcher struct {
 	source    string
 	md5Source string
@@ -114,7 +122,7 @@ func (rw *RSSWatcher) handle() error {
 	for _, item := range items {
 		msg := types.WrapMsg(&types.Message{
 			Title:   item.Title,
-			Content: item.Description,
+			Content: normalizeContent(item.Description, 300),
 			Tags:    []string{"rss-watcher", rw.source},
 			URL:     item.Link,
 		})
