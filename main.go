@@ -41,6 +41,8 @@ func main() {
 		kvStore = kv.NewFireStore(cfg.FireStoreConfig.ProjectID, cfg.FireStoreConfig.Collection)
 	case "dynamo-kv":
 		kvStore = kv.NewDynamoKvClient(cfg.DynamoConfig.Token)
+	case "redis":
+		kvStore = kv.NewRedisStore(cfg.RedisUri)
 	}
 
 	if cfg.DingConfig != nil {
