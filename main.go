@@ -43,6 +43,8 @@ func main() {
 		kvStore = kv.NewDynamoKvClient(cfg.DynamoConfig.Token)
 	case "redis":
 		kvStore = kv.NewRedisStore(cfg.RedisUri)
+	case "cloud-config":
+		kvStore = kv.NewCloudConfig(cfg.CloudConfigConfig.Endpoint, cfg.CloudConfigConfig.Token)
 	}
 
 	if cfg.DingConfig != nil {

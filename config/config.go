@@ -39,16 +39,17 @@ func (d *Duration) UnmarshalJSON(b []byte) error {
 }
 
 type Config struct {
-	DingConfig          *DingConfig      `json:"ding_config" validate:"omitempty,dive"`
-	MailConfig          *MailConfig      `json:"mail_config" validate:"omitempty,dive"`
-	FireStoreConfig     *FireStoreConfig `json:"fire_store_config" validate:"omitempty,dive"`
-	TelegramConfig      *TelegramConfig  `json:"telegram_config" validate:"omitempty,dive"`
-	KvStore             string           `json:"kv_store" validate:"required,oneof=mem file firestore dynamo-kv redis"`
-	FileStoreConfigPath string           `json:"file_store_config_path" validate:"omitempty"`
-	RedisUri            string           `json:"redis_uri" validate:"omitempty"`
-	DynamoConfig        *DynamoKvConfig  `json:"dynamo_config" validate:"omitempty,dive"`
-	WatcherConfigs      []WatcherConfig  `json:"watcher_configs" validate:"gt=0,dive"`
-	Single              bool             `json:"single" validate:"omitempty"`
+	DingConfig          *DingConfig        `json:"ding_config" validate:"omitempty,dive"`
+	MailConfig          *MailConfig        `json:"mail_config" validate:"omitempty,dive"`
+	FireStoreConfig     *FireStoreConfig   `json:"fire_store_config" validate:"omitempty,dive"`
+	TelegramConfig      *TelegramConfig    `json:"telegram_config" validate:"omitempty,dive"`
+	KvStore             string             `json:"kv_store" validate:"required,oneof=mem file firestore dynamo-kv redis cloud-config"`
+	FileStoreConfigPath string             `json:"file_store_config_path" validate:"omitempty"`
+	RedisUri            string             `json:"redis_uri" validate:"omitempty"`
+	DynamoConfig        *DynamoKvConfig    `json:"dynamo_config" validate:"omitempty,dive"`
+	WatcherConfigs      []WatcherConfig    `json:"watcher_configs" validate:"gt=0,dive"`
+	Single              bool               `json:"single" validate:"omitempty"`
+	CloudConfigConfig   *CloudConfigConfig `json:"cloud_config_config" validate:"omitempty,dive"`
 }
 
 type DingConfig struct {
@@ -81,6 +82,11 @@ type FireStoreConfig struct {
 
 type DynamoKvConfig struct {
 	Token string `json:"token" validate:"required"`
+}
+
+type CloudConfigConfig struct {
+	Token    string `json:"token" validate:"required"`
+	Endpoint string `json:"endpoint" validate:"required"`
 }
 
 func LoadConfigFromFile(f string) *Config {
@@ -149,6 +155,10 @@ func validateConfig(c *Config) {
 	case "redis":
 		if c.RedisUri == "" {
 			panic("redis_uri is required when kv_store is redis")
+		}
+	case "cloud-config":
+		if c.CloudConfigConfig == nil {
+			panic("cloud_config_config is required when kv_store is cloud-config")
 		}
 	}
 }

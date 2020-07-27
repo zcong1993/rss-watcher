@@ -85,6 +85,7 @@ func (rw *RSSWatcher) handle() error {
 	fmt.Printf("run tick %s\n", time.Now().String())
 	feed, err := rw.parser.ParseURL(rw.source)
 	if err != nil {
+		fmt.Printf("get feed error, url: %s, err: %s", rw.source, err.Error())
 		return err
 	}
 	var items []*gofeed.Item
