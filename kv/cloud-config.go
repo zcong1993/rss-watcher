@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"time"
 )
@@ -66,6 +67,10 @@ func (cc *CloudConfig) Set(key string, value interface{}) error {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
+		body, err := ioutil.ReadAll(resp.Body)
+		if err == nil {
+			fmt.Printf("error: %s\n", body)
+		}
 		return errors.New("set error")
 	}
 	return nil
