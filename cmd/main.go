@@ -5,16 +5,16 @@ import (
 	"os"
 	"sync"
 
-	"github.com/zcong1993/rss-watcher/notifiers/printer"
+	"github.com/zcong1993/rss-watcher/pkg/notifiers/printer"
 
 	"github.com/zcong1993/notifiers/adapters/tg"
 
 	"github.com/zcong1993/notifiers/adapters/ding"
 	"github.com/zcong1993/notifiers/adapters/mail"
 	"github.com/zcong1993/notifiers/types"
-	"github.com/zcong1993/rss-watcher/config"
-	"github.com/zcong1993/rss-watcher/kv"
-	"github.com/zcong1993/rss-watcher/watcher"
+	"github.com/zcong1993/rss-watcher/pkg/config"
+	"github.com/zcong1993/rss-watcher/pkg/kv"
+	"github.com/zcong1993/rss-watcher/pkg/watcher"
 )
 
 func main() {

@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/zcong1993/rss-watcher/kv"
+	"github.com/zcong1993/rss-watcher/pkg/kv"
 )
 
 func TestMemStore_Get(t *testing.T) {
