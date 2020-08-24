@@ -1,21 +1,17 @@
+name: Docker Build and Push Latest
+
 on: push
-name: Docker Build and Push
+
 jobs:
-  dockerLogin:
-    name: Docker Login
+  dockerBuildPush:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@master
-    - name: Publish Docker
-      uses: elgohr/Publish-Docker-Github-Action@1.10
-      with:
-        name: zcong/rss-watcher
-        username: zcong
-        password: ${{ secrets.DOCKER_PASSWORD }}
-    - name: Publish to Github Registry
-      uses: elgohr/Publish-Docker-Github-Action@1.10
-      with:
-        name: docker.pkg.github.com/zcong1993/rss-watcher/rss-watcher
-        username: zcong1993
-        password: ${{ secrets.GITHUB_REGISTRY_TOKEN }}
-        registry: docker.pkg.github.com
+      - name: Checkout code
+        uses: actions/checkout@main
+      - name: Build and push Docker images
+        uses: docker/build-push-action@v1
+        with:
+          username: zcong
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          repository: zcong/rss-watcher
+          tags: latest

@@ -21,3 +21,11 @@ jobs:
           args: release --rm-dist
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push Docker images
+        uses: docker/build-push-action@v1
+        with:
+          username: zcong
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          repository: zcong/rss-watcher
+          tag_with_ref: true
+          push: ${{ startsWith(github.ref, 'refs/tags/') }}
