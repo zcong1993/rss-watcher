@@ -10,7 +10,7 @@ import (
 
 	"github.com/mmcdole/gofeed"
 	"github.com/zcong1993/notifiers/types"
-	"github.com/zcong1993/rss-watcher/kv"
+	"github.com/zcong1993/rss-watcher/pkg/kv"
 )
 
 func normalizeContent(content string, length int) string {
