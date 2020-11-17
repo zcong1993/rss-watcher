@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"sync"
@@ -17,7 +18,22 @@ import (
 	"github.com/zcong1993/rss-watcher/pkg/watcher"
 )
 
+var (
+	version = "master"
+	commit  = ""
+	date    = ""
+	builtBy = ""
+)
+
 func main() {
+	versionFlag := flag.Bool("v", false, "Show version")
+	flag.Parse()
+
+	if *versionFlag {
+		fmt.Println(buildVersion(version, commit, date, builtBy))
+		os.Exit(0)
+	}
+
 	configFile := os.Getenv("CONFIG_FILE")
 	if configFile == "" {
 		configFile = "./config.json"
@@ -114,4 +130,18 @@ func main() {
 		forever := make(chan struct{})
 		<-forever
 	}
+}
+
+func buildVersion(version, commit, date, builtBy string) string {
+	var result = version
+	if commit != "" {
+		result = fmt.Sprintf("%s\ncommit: %s", result, commit)
+	}
+	if date != "" {
+		result = fmt.Sprintf("%s\nbuilt at: %s", result, date)
+	}
+	if builtBy != "" {
+		result = fmt.Sprintf("%s\nbuilt by: %s", result, builtBy)
+	}
+	return result
 }

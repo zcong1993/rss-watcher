@@ -27,3 +27,13 @@ changelog:
     exclude:
     - '^docs:'
     - '^test:'
+
+brews:
+  - tap:
+      owner: zcong1993
+      name: homebrew-tap
+    folder: Formula
+    homepage: https://github.com/zcong1993/rss-watcher
+    description: Watch rss source
+    test: |
+      system "#{bin}/rss-watcher -v"
