@@ -106,6 +106,7 @@ func (rw *RSSWatcher) handle() error {
 	}
 
 	if err != nil {
+		fmt.Printf("store get err %+v\n", err)
 		items = append(items, feedItems[0])
 	} else {
 		for i, item := range feedItems {
