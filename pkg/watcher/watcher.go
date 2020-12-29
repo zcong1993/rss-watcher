@@ -129,7 +129,7 @@ func (rw *RSSWatcher) handle() error {
 		items = append(items, feedItems[0])
 	} else {
 		for i, item := range feedItems {
-			if item.GUID == last.GUID {
+			if item.Link == last.Link {
 				break
 			}
 			if i > 4 {
