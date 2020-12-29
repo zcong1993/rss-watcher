@@ -1,11 +1,14 @@
 name: Docker Build and Push Latest
 
-on: push
+on:
+  push:
+    tags-ignore:
+      - "**"
+
 
 jobs:
   dockerBuildPush:
     runs-on: ubuntu-latest
-    if: !startsWith(github.ref, 'refs/tags/')
     steps:
       - name: Checkout code
         uses: actions/checkout@main
