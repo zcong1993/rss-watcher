@@ -2,9 +2,10 @@ package config
 
 import (
 	"encoding/json"
-	"errors"
 	"io/ioutil"
 	"time"
+
+	"github.com/pkg/errors"
 
 	"gopkg.in/go-playground/validator.v9"
 )
@@ -41,15 +42,14 @@ func (d *Duration) UnmarshalJSON(b []byte) error {
 type Config struct {
 	DingConfig          *DingConfig        `json:"ding_config" validate:"omitempty,dive"`
 	MailConfig          *MailConfig        `json:"mail_config" validate:"omitempty,dive"`
-	FireStoreConfig     *FireStoreConfig   `json:"fire_store_config" validate:"omitempty,dive"`
 	TelegramConfig      *TelegramConfig    `json:"telegram_config" validate:"omitempty,dive"`
-	KvStore             string             `json:"kv_store" validate:"required,oneof=mem file firestore dynamo-kv redis cloud-config"`
+	KvStore             string             `json:"kv_store" validate:"required,oneof=mem file fauna"`
 	FileStoreConfigPath string             `json:"file_store_config_path" validate:"omitempty"`
 	RedisUri            string             `json:"redis_uri" validate:"omitempty"`
-	DynamoConfig        *DynamoKvConfig    `json:"dynamo_config" validate:"omitempty,dive"`
 	WatcherConfigs      []WatcherConfig    `json:"watcher_configs" validate:"gt=0,dive"`
 	Single              bool               `json:"single" validate:"omitempty"`
 	CloudConfigConfig   *CloudConfigConfig `json:"cloud_config_config" validate:"omitempty,dive"`
+	FaunaConfig         *FaunaConfig       `json:"fauna_config" validate:"omitempty,dive"`
 }
 
 type DingConfig struct {
@@ -75,38 +75,35 @@ type TelegramConfig struct {
 	ToID  int64  `json:"to_id" validate:"required"`
 }
 
-type FireStoreConfig struct {
-	ProjectID  string `json:"project_id" validate:"required"`
-	Collection string `json:"collection" validate:"required"`
-}
-
-type DynamoKvConfig struct {
-	Token string `json:"token" validate:"required"`
-}
-
 type CloudConfigConfig struct {
 	Token    string `json:"token" validate:"required"`
 	Endpoint string `json:"endpoint" validate:"required"`
 }
 
-func LoadConfigFromFile(f string) *Config {
+type FaunaConfig struct {
+	Secret     string `json:"secret" validate:"required"`
+	Collection string `json:"collection" validate:"required"`
+	IndexName  string `json:"index_name" validate:"required"`
+}
+
+func LoadConfigFromFile(f string) (*Config, error) {
 	configBytes, err := ioutil.ReadFile(f)
 	if err != nil {
-		panic(err)
+		return nil, errors.Wrap(err, "read config file")
 	}
 	var config Config
 	err = json.Unmarshal(configBytes, &config)
 	if err != nil {
-		panic(err)
+		return nil, errors.Wrap(err, "unmarshal config file")
 	}
-	validateConfig(&config)
-	return &config
+	err = validateConfig(&config)
+	return &config, err
 }
 
-func validateConfig(c *Config) {
+func validateConfig(c *Config) error {
 	err := validator.New().Struct(c)
 	if err != nil {
-		panic(err)
+		return errors.Wrap(err, "validate config")
 	}
 	notifiers := make(map[string]struct{})
 	for _, rw := range c.WatcherConfigs {
@@ -127,38 +124,31 @@ func validateConfig(c *Config) {
 		switch k {
 		case "ding":
 			if c.DingConfig == nil {
-				panic("ding config is required")
+				return errors.New("ding config is required")
 			}
 		case "mail":
 			if c.MailConfig == nil {
-				panic("mail config is required")
+				return errors.New("mail config is required")
 			}
 		case "tg":
 			if c.TelegramConfig == nil {
-				panic("telegram config is required")
+				return errors.New("telegram config is required")
 			}
 		}
 	}
 	switch c.KvStore {
 	case "file":
 		if c.FileStoreConfigPath == "" {
-			panic("file_store_config_path is required when kv_store is file")
-		}
-	case "firestore":
-		if c.FireStoreConfig == nil {
-			panic("fire_store_config is required when kv_store is firestore")
-		}
-	case "dynamo-kv":
-		if c.DynamoConfig == nil {
-			panic("dynamo_config is required when kv_store is dynamo-kv")
-		}
-	case "redis":
-		if c.RedisUri == "" {
-			panic("redis_uri is required when kv_store is redis")
+			return errors.New("file_store_config_path is required when kv_store is file")
 		}
 	case "cloud-config":
 		if c.CloudConfigConfig == nil {
-			panic("cloud_config_config is required when kv_store is cloud-config")
+			return errors.New("cloud_config_config is required when kv_store is cloud-config")
+		}
+	case "fauna":
+		if c.FaunaConfig == nil {
+			return errors.New("fauna_config is required when kv_store is cloud-config")
 		}
 	}
+	return nil
 }

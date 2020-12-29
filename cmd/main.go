@@ -1,10 +1,16 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
 	"sync"
+	"syscall"
+
+	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
+	"github.com/oklog/run"
 
 	"github.com/zcong1993/rss-watcher/pkg/notifiers/printer"
 
@@ -34,13 +40,22 @@ func main() {
 		os.Exit(0)
 	}
 
+	logger := log.NewLogfmtLogger(log.NewSyncWriter(os.Stderr))
+	logger = log.With(logger, "ts", log.DefaultTimestampUTC, "caller", log.DefaultCaller)
+
 	configFile := os.Getenv("CONFIG_FILE")
 	if configFile == "" {
 		configFile = "./config.json"
 	}
-	cfg := config.LoadConfigFromFile(configFile)
 
-	fmt.Printf("use kv store: %s\n", cfg.KvStore)
+	cfg, err := config.LoadConfigFromFile(configFile)
+
+	if err != nil {
+		level.Error(logger).Log("msg", "load config", "error", err.Error())
+		os.Exit(1)
+	}
+
+	level.Info(logger).Log("msg", fmt.Sprintf("use kv store: %s", cfg.KvStore))
 
 	var (
 		kvStore      kv.Store
@@ -53,14 +68,14 @@ func main() {
 		kvStore = kv.NewMemStore()
 	case "file":
 		kvStore = kv.NewFileStore(cfg.FileStoreConfigPath)
-	case "firestore":
-		kvStore = kv.NewFireStore(cfg.FireStoreConfig.ProjectID, cfg.FireStoreConfig.Collection)
-	case "dynamo-kv":
-		kvStore = kv.NewDynamoKvClient(cfg.DynamoConfig.Token)
-	case "redis":
-		kvStore = kv.NewRedisStore(cfg.RedisUri)
-	case "cloud-config":
-		kvStore = kv.NewCloudConfig(cfg.CloudConfigConfig.Endpoint, cfg.CloudConfigConfig.Token)
+	case "fauna":
+		kvs, err := kv.NewFanua(cfg.FaunaConfig)
+		if err != nil {
+			level.Error(logger).Log("msg", "init fauna", "error", err.Error())
+			os.Exit(1)
+		} else {
+			kvStore = kvs
+		}
 	}
 
 	if cfg.DingConfig != nil {
@@ -75,7 +90,7 @@ func main() {
 
 	// run single
 	if cfg.Single {
-		fmt.Println("run single and exit.")
+		level.Info(logger).Log("msg", "run single and exit")
 		wg := sync.WaitGroup{}
 		for _, rw := range cfg.WatcherConfigs {
 			notifiers := make([]types.Notifier, 0)
@@ -96,16 +111,19 @@ func main() {
 
 			wg.Add(1)
 			go func() {
-				watcherClient := watcher.NewRSSWatcher(rw.Source, rw.Interval.Duration, kvStore, notifiers, rw.Skip)
+				watcherClient := watcher.NewRSSWatcher(logger, rw.Source, rw.Interval.Duration, kvStore, notifiers, rw.Skip)
 				_ = watcherClient.Single()
 				wg.Done()
 			}()
 		}
 
 		wg.Wait()
-		fmt.Println("\nDone!")
+		level.Info(logger).Log("msg", "done")
+		os.Exit(0)
 	} else {
 		// run as daemon
+		var g run.Group
+
 		for _, rw := range cfg.WatcherConfigs {
 			notifiers := make([]types.Notifier, 0)
 			for _, t := range rw.Notifiers {
@@ -121,14 +139,27 @@ func main() {
 
 			rw := rw
 
-			go func() {
-				watcherClient := watcher.NewRSSWatcher(rw.Source, rw.Interval.Duration, kvStore, notifiers, rw.Skip)
+			watcherClient := watcher.NewRSSWatcher(logger, rw.Source, rw.Interval.Duration, kvStore, notifiers, rw.Skip)
+			g.Add(func() error {
 				watcherClient.Run()
-			}()
+				return nil
+			}, func(err error) {
+				if err != nil {
+					level.Error(logger).Log("msg", fmt.Sprintf("exit cause: %s", err))
+				}
+				watcherClient.Close()
+			})
 		}
 
-		forever := make(chan struct{})
-		<-forever
+		e, i := run.SignalHandler(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+		g.Add(e, i)
+
+		err := g.Run()
+		if err != nil {
+			level.Error(logger).Log("msg", "running failed", "err", err)
+			os.Exit(1)
+		}
+		level.Info(logger).Log("msg", "exiting")
 	}
 }
 
