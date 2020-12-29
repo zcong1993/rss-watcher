@@ -1,6 +1,7 @@
 package kv_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -9,19 +10,19 @@ import (
 
 func TestMemStore_Get(t *testing.T) {
 	ms := kv.NewMemStore()
-	val, err := ms.Get("test1")
+	val, err := ms.Get(context.Background(), "test1")
 	assert.Error(t, err)
-	_ = ms.Set("test", "string")
-	val, err = ms.Get("test")
+	_ = ms.Set(context.Background(), "test", "string")
+	val, err = ms.Get(context.Background(), "test")
 	assert.Nil(t, err)
 	assert.Equal(t, "string", val)
 }
 
 func TestMemStore_Set(t *testing.T) {
 	ms := kv.NewMemStore()
-	err := ms.Set("test", "string")
+	err := ms.Set(context.Background(), "test", "string")
 	assert.Nil(t, err)
-	val, err := ms.Get("test")
+	val, err := ms.Get(context.Background(), "test")
 	assert.Nil(t, err)
 	assert.Equal(t, "string", val)
 }

@@ -1,11 +1,15 @@
 package kv
 
-import "github.com/pkg/errors"
+import (
+	"context"
+
+	"github.com/pkg/errors"
+)
 
 type Store interface {
 	Name() string
-	Get(key string) (string, error)
-	Set(key string, value string) error
+	Get(ctx context.Context, key string) (string, error)
+	Set(ctx context.Context, key string, value string) error
 	Close() error
 }
 

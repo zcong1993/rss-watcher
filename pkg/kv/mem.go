@@ -1,5 +1,7 @@
 package kv
 
+import "context"
+
 type MemStore struct {
 	store map[string]string
 }
@@ -8,7 +10,7 @@ func NewMemStore() *MemStore {
 	return &MemStore{store: make(map[string]string)}
 }
 
-func (ms *MemStore) Get(key string) (string, error) {
+func (ms *MemStore) Get(_ context.Context, key string) (string, error) {
 	v, ok := ms.store[key]
 	if !ok {
 		return "", ErrNotFound
@@ -16,7 +18,7 @@ func (ms *MemStore) Get(key string) (string, error) {
 	return v, nil
 }
 
-func (ms *MemStore) Set(key string, value string) error {
+func (ms *MemStore) Set(_ context.Context, key string, value string) error {
 	ms.store[key] = value
 	return nil
 }
@@ -28,3 +30,5 @@ func (ms *MemStore) Close() error {
 func (ms *MemStore) Name() string {
 	return "mem"
 }
+
+var _ Store = (*MemStore)(nil)

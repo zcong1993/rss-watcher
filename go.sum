@@ -59,7 +59,6 @@ github.com/facebookgo/stack v0.0.0-20160209184415-751773369052/go.mod h1:UbMTZqL
 github.com/facebookgo/subset v0.0.0-20150612182917-8dac2c3c4870 h1:E2s37DuLxFhQDg5gKsWoLBOB0n+ZW8s599zru8FJ2/Y=
 github.com/facebookgo/subset v0.0.0-20150612182917-8dac2c3c4870/go.mod h1:5tD+neXqOorC30/tWg0LCSkrqj/AR6gu8yY8/fpw1q0=
 github.com/fatih/color v1.7.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5KwzbycvMj4=
-github.com/fauna/faunadb-go v1.0.0 h1:WeveMTvi99E3RkJHNuMeJ1zD4Z0bXb3NT6/854HV6XU=
 github.com/fauna/faunadb-go v2.0.0+incompatible h1:b+iaebxQ37qQtQCEYpfatxeZVF+L0HTBTTrCMcV8itI=
 github.com/fauna/faunadb-go v2.0.0+incompatible/go.mod h1:WYAh1hNDFEgbsKKeUhsHPGIFkpQ1CGn/5XejAFfOhHg=
 github.com/fauna/faunadb-go/v3 v3.0.0 h1:jb7I54xQMdpweUCVIDaDqeNN0V1cL6DxyIjlNFjYlho=
@@ -292,8 +291,8 @@ github.com/tmc/grpc-websocket-proxy v0.0.0-20170815181823-89b8d40f7ca8/go.mod h1
 github.com/urfave/cli v1.20.0/go.mod h1:70zkFmudgCuE/ngEzBv17Jvp/497gISqfk5gWijbERA=
 github.com/urfave/cli v1.22.1/go.mod h1:Gos4lmkARVdJ6EkW0WaNv/tZAAMe9V7XWyB60NtXRu0=
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
-github.com/zcong1993/notifiers v0.0.0-20190416074313-bfbd4f78b7a9 h1:3krxT6I2/DBce0GdqT4BwY0haB8gBlD0/kTHOpAGaO4=
-github.com/zcong1993/notifiers v0.0.0-20190416074313-bfbd4f78b7a9/go.mod h1:AMBLdBiLWLkE1ZzEAXmG53dgPCHsRXna48JEEBcci6Y=
+github.com/zcong1993/notifiers v0.2.0 h1:YhUvZG0IcJd2rSM2ciCGMo/D+hz8zwk6xjb5jjZYk4w=
+github.com/zcong1993/notifiers v0.2.0/go.mod h1:HP5AQxvY32RPfgl9NTNN6YaEmaFUcX6wMLwwM/h/Ues=
 go.etcd.io/bbolt v1.3.3/go.mod h1:IbVyRI1SCnLcuJnV2u8VeU0CEYM7e686BmAb1XKL+uU=
 go.etcd.io/etcd v0.0.0-20191023171146-3cf2f69b5738/go.mod h1:dnLIgRNXwCJa5e+c6mIZCrds/GIG4ncV9HhK5PX7jPg=
 go.opencensus.io v0.20.1 h1:pMEjRZ1M4ebWGikflH7nQpV6+Zr88KBMA2XJD3sbijw=

@@ -1,6 +1,7 @@
 package kv
 
 import (
+	"context"
 	"encoding/json"
 	"io/ioutil"
 	"os"
@@ -38,7 +39,7 @@ func (fs *FileStore) Name() string {
 	return "file"
 }
 
-func (fs *FileStore) Get(key string) (string, error) {
+func (fs *FileStore) Get(_ context.Context, key string) (string, error) {
 	v, ok := fs.store[key]
 	if !ok {
 		return "", ErrNotFound
@@ -46,7 +47,7 @@ func (fs *FileStore) Get(key string) (string, error) {
 	return v, nil
 }
 
-func (fs *FileStore) Set(key string, value string) error {
+func (fs *FileStore) Set(_ context.Context, key string, value string) error {
 	fs.store[key] = value
 	return fs.save()
 }
@@ -68,3 +69,5 @@ func (fs *FileStore) save() error {
 func (fs *FileStore) Close() error {
 	return nil
 }
+
+var _ Store = (*FileStore)(nil)

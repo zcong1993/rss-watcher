@@ -8,11 +8,11 @@ import (
 	"sync"
 	"syscall"
 
+	"github.com/zcong1993/notifiers/adapters/printer"
+
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/oklog/run"
-
-	"github.com/zcong1993/rss-watcher/pkg/notifiers/printer"
 
 	"github.com/zcong1993/notifiers/adapters/tg"
 
@@ -69,23 +69,29 @@ func main() {
 	case "file":
 		kvStore = kv.NewFileStore(cfg.FileStoreConfigPath)
 	case "fauna":
-		kvs, err := kv.NewFanua(cfg.FaunaConfig)
+		kvStore, err = kv.NewFanua(cfg.FaunaConfig)
 		if err != nil {
 			level.Error(logger).Log("msg", "init fauna", "error", err.Error())
 			os.Exit(1)
-		} else {
-			kvStore = kvs
 		}
 	}
 
 	if cfg.DingConfig != nil {
-		dingNotifier = ding.NewClient(cfg.DingConfig.Token)
+		dd := ding.NewClient(cfg.DingConfig.Token)
+		dd.SetLogger(log.WithPrefix(logger, "component", "dingding"))
+		dingNotifier = dd
 	}
 	if cfg.MailConfig != nil {
-		mailNotifier = mail.NewClient(cfg.MailConfig.Domain, cfg.MailConfig.PrivateKey, cfg.MailConfig.To, cfg.MailConfig.From)
+		mc := mail.NewClient(cfg.MailConfig.Domain, cfg.MailConfig.PrivateKey, cfg.MailConfig.To, cfg.MailConfig.From)
+		mc.SetLogger(log.WithPrefix(logger, "component", "mailgun"))
+		mailNotifier = mc
 	}
 	if cfg.TelegramConfig != nil {
-		tgNotifier = tg.NewClient(cfg.TelegramConfig.Token, cfg.TelegramConfig.ToID)
+		tgNotifier, err = tg.NewClient(cfg.TelegramConfig.Token, cfg.TelegramConfig.ToID, log.WithPrefix(logger, "component", "tg"))
+		if err != nil {
+			level.Error(logger).Log("msg", "init tg", "error", err.Error())
+			os.Exit(1)
+		}
 	}
 
 	// run single
@@ -112,7 +118,7 @@ func main() {
 			wg.Add(1)
 			go func() {
 				watcherClient := watcher.NewRSSWatcher(logger, rw.Source, rw.Interval.Duration, kvStore, notifiers, rw.Skip)
-				_ = watcherClient.Single()
+				_ = watcherClient.Single(context.Background())
 				wg.Done()
 			}()
 		}
@@ -141,7 +147,7 @@ func main() {
 
 			watcherClient := watcher.NewRSSWatcher(logger, rw.Source, rw.Interval.Duration, kvStore, notifiers, rw.Skip)
 			g.Add(func() error {
-				watcherClient.Run()
+				watcherClient.Run(context.Background())
 				return nil
 			}, func(err error) {
 				if err != nil {

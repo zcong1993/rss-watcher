@@ -14,7 +14,7 @@ require (
 	github.com/oklog/run v1.1.0
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.6.1
-	github.com/zcong1993/notifiers v0.0.0-20190416074313-bfbd4f78b7a9
+	github.com/zcong1993/notifiers v0.2.0
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/validator.v9 v9.28.0
 )

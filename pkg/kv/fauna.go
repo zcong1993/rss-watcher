@@ -1,6 +1,8 @@
 package kv
 
 import (
+	"context"
+
 	"github.com/fauna/faunadb-go/v3/faunadb"
 	"github.com/pkg/errors"
 	"github.com/zcong1993/rss-watcher/pkg/config"
@@ -30,7 +32,7 @@ func (f *Fanua) Name() string {
 	return "fanua"
 }
 
-func (f *Fanua) Get(key string) (string, error) {
+func (f *Fanua) Get(_ context.Context, key string) (string, error) {
 	res, err := f.get(key)
 	if err != nil {
 		return "", err
@@ -42,7 +44,7 @@ func (f *Fanua) Get(key string) (string, error) {
 	return val.Value, nil
 }
 
-func (f *Fanua) Set(key string, value string) error {
+func (f *Fanua) Set(_ context.Context, key string, value string) error {
 	res, err := f.get(key)
 	if errors.Is(err, ErrNotFound) {
 		return f.create(key, value)
@@ -94,3 +96,5 @@ func (f *Fanua) get(key string) (faunadb.Value, error) {
 func (f *Fanua) Close() error {
 	return nil
 }
+
+var _ Store = (*Fanua)(nil)
