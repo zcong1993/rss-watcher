@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 
@@ -83,6 +84,7 @@ func (rw *RSSWatcher) Run() {
 }
 
 func (rw *RSSWatcher) Close() {
+	rw.closeCloser(rw.store, "store")
 	close(rw.closeCh)
 }
 
@@ -172,4 +174,10 @@ func (rw *RSSWatcher) handle() error {
 	}
 
 	return nil
+}
+
+func (rw *RSSWatcher) closeCloser(closer io.Closer, name string) {
+	if err := closer.Close(); err != nil {
+		level.Error(rw.logger).Log("msg", fmt.Sprintf("%s close error", name), "error", err.Error())
+	}
 }

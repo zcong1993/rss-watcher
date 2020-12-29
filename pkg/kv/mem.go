@@ -24,3 +24,7 @@ func (ms *MemStore) Set(key string, value string) error {
 func (ms *MemStore) Close() error {
 	return nil
 }
+
+func (ms *MemStore) Name() string {
+	return "mem"
+}

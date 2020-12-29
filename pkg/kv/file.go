@@ -34,6 +34,10 @@ func NewFileStore(p string) *FileStore {
 	}
 }
 
+func (fs *FileStore) Name() string {
+	return "file"
+}
+
 func (fs *FileStore) Get(key string) (string, error) {
 	v, ok := fs.store[key]
 	if !ok {

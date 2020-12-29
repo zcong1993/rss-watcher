@@ -47,7 +47,13 @@ func main() {
 	if configFile == "" {
 		configFile = "./config.json"
 	}
-	cfg := config.LoadConfigFromFile(configFile)
+
+	cfg, err := config.LoadConfigFromFile(configFile)
+
+	if err != nil {
+		level.Error(logger).Log("msg", "load config", "error", err.Error())
+		os.Exit(1)
+	}
 
 	level.Info(logger).Log("msg", fmt.Sprintf("use kv store: %s", cfg.KvStore))
 
@@ -62,8 +68,14 @@ func main() {
 		kvStore = kv.NewMemStore()
 	case "file":
 		kvStore = kv.NewFileStore(cfg.FileStoreConfigPath)
-		//case "cloud-config":
-		//	kvStore = kv.NewCloudConfig(cfg.CloudConfigConfig.Endpoint, cfg.CloudConfigConfig.Token)
+	case "fauna":
+		kvs, err := kv.NewFanua(cfg.FaunaConfig)
+		if err != nil {
+			level.Error(logger).Log("msg", "init fauna", "error", err.Error())
+			os.Exit(1)
+		} else {
+			kvStore = kvs
+		}
 	}
 
 	if cfg.DingConfig != nil {
