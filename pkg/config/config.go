@@ -41,12 +41,10 @@ func (d *Duration) UnmarshalJSON(b []byte) error {
 type Config struct {
 	DingConfig          *DingConfig        `json:"ding_config" validate:"omitempty,dive"`
 	MailConfig          *MailConfig        `json:"mail_config" validate:"omitempty,dive"`
-	FireStoreConfig     *FireStoreConfig   `json:"fire_store_config" validate:"omitempty,dive"`
 	TelegramConfig      *TelegramConfig    `json:"telegram_config" validate:"omitempty,dive"`
-	KvStore             string             `json:"kv_store" validate:"required,oneof=mem file firestore dynamo-kv redis cloud-config"`
+	KvStore             string             `json:"kv_store" validate:"required,oneof=mem file"`
 	FileStoreConfigPath string             `json:"file_store_config_path" validate:"omitempty"`
 	RedisUri            string             `json:"redis_uri" validate:"omitempty"`
-	DynamoConfig        *DynamoKvConfig    `json:"dynamo_config" validate:"omitempty,dive"`
 	WatcherConfigs      []WatcherConfig    `json:"watcher_configs" validate:"gt=0,dive"`
 	Single              bool               `json:"single" validate:"omitempty"`
 	CloudConfigConfig   *CloudConfigConfig `json:"cloud_config_config" validate:"omitempty,dive"`
@@ -73,15 +71,6 @@ type WatcherConfig struct {
 type TelegramConfig struct {
 	Token string `json:"token" validate:"required"`
 	ToID  int64  `json:"to_id" validate:"required"`
-}
-
-type FireStoreConfig struct {
-	ProjectID  string `json:"project_id" validate:"required"`
-	Collection string `json:"collection" validate:"required"`
-}
-
-type DynamoKvConfig struct {
-	Token string `json:"token" validate:"required"`
 }
 
 type CloudConfigConfig struct {
@@ -143,18 +132,6 @@ func validateConfig(c *Config) {
 	case "file":
 		if c.FileStoreConfigPath == "" {
 			panic("file_store_config_path is required when kv_store is file")
-		}
-	case "firestore":
-		if c.FireStoreConfig == nil {
-			panic("fire_store_config is required when kv_store is firestore")
-		}
-	case "dynamo-kv":
-		if c.DynamoConfig == nil {
-			panic("dynamo_config is required when kv_store is dynamo-kv")
-		}
-	case "redis":
-		if c.RedisUri == "" {
-			panic("redis_uri is required when kv_store is redis")
 		}
 	case "cloud-config":
 		if c.CloudConfigConfig == nil {

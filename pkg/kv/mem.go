@@ -1,26 +1,26 @@
 package kv
 
-import (
-	"github.com/jinzhu/copier"
-)
-
 type MemStore struct {
-	store map[string]interface{}
+	store map[string]string
 }
 
 func NewMemStore() *MemStore {
-	return &MemStore{store: make(map[string]interface{})}
+	return &MemStore{store: make(map[string]string)}
 }
 
-func (ms *MemStore) Get(key string, value interface{}) error {
+func (ms *MemStore) Get(key string) (string, error) {
 	v, ok := ms.store[key]
 	if !ok {
-		return ErrNotFound
+		return "", ErrNotFound
 	}
-	return copier.Copy(value, v)
+	return v, nil
 }
 
-func (ms *MemStore) Set(key string, value interface{}) error {
+func (ms *MemStore) Set(key string, value string) error {
 	ms.store[key] = value
+	return nil
+}
+
+func (ms *MemStore) Close() error {
 	return nil
 }

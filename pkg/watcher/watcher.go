@@ -2,11 +2,14 @@ package watcher
 
 import (
 	"crypto/md5"
-	"errors"
+	"encoding/json"
 	"fmt"
 	"net/http"
-	"strings"
 	"time"
+
+	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
+	"github.com/pkg/errors"
 
 	"github.com/mmcdole/gofeed"
 	"github.com/zcong1993/notifiers/types"
@@ -22,6 +25,7 @@ func normalizeContent(content string, length int) string {
 }
 
 type RSSWatcher struct {
+	logger    log.Logger
 	source    string
 	md5Source string
 	store     kv.Store
@@ -32,10 +36,11 @@ type RSSWatcher struct {
 	parser    *gofeed.Parser
 }
 
-func NewRSSWatcher(source string, interval time.Duration, store kv.Store, notifiers []types.Notifier, skip int) *RSSWatcher {
+func NewRSSWatcher(logger log.Logger, source string, interval time.Duration, store kv.Store, notifiers []types.Notifier, skip int) *RSSWatcher {
 	parser := gofeed.NewParser()
-	parser.Client = &http.Client{Timeout: time.Second * 5}
+	parser.Client = &http.Client{Timeout: time.Second * 10}
 	return &RSSWatcher{
+		logger:    log.WithPrefix(logger, "component", "watcher", "source", source),
 		source:    source,
 		interval:  interval,
 		store:     store,
@@ -50,7 +55,7 @@ func NewRSSWatcher(source string, interval time.Duration, store kv.Store, notifi
 func (rw *RSSWatcher) Single() error {
 	err := rw.handle()
 	if err != nil {
-		fmt.Printf("rss watcher handle error: %+v\n", err)
+		level.Error(rw.logger).Log("msg", fmt.Sprintf("rss watcher handle error: %s", err))
 		return err
 	}
 	return nil
@@ -61,39 +66,47 @@ func (rw *RSSWatcher) Run() {
 	defer t.Stop()
 	err := rw.handle()
 	if err != nil {
-		fmt.Printf("rss watcher handle error: %+v\n", err)
+		level.Error(rw.logger).Log("msg", fmt.Sprintf("rss watcher handle error: %s", err))
 	}
 	for {
 		select {
 		case <-t.C:
 			err := rw.handle()
 			if err != nil {
-				fmt.Printf("rss watcher handle error: %+v\n", err)
+				level.Error(rw.logger).Log("msg", fmt.Sprintf("rss watcher handle error: %s", err))
 			}
 		case <-rw.closeCh:
-			fmt.Printf("source for %s watcher exist.\n", rw.source)
+			level.Info(rw.logger).Log("msg", fmt.Sprintf("source for %s watcher exit", rw.source))
 			return
 		}
 	}
 }
 
 func (rw *RSSWatcher) Close() {
-	rw.closeCh <- struct{}{}
+	close(rw.closeCh)
 }
 
 func (rw *RSSWatcher) handle() error {
-	fmt.Printf("run tick %s\n", time.Now().String())
+	level.Info(rw.logger).Log("msg", fmt.Sprintf("run tick %s", time.Now().String()))
 	feed, err := rw.parser.ParseURL(rw.source)
 	if err != nil {
-		fmt.Printf("get feed error, url: %s, err: %s", rw.source, err.Error())
-		return err
+		return errors.Wrapf(err, "get feed error, url: %s", rw.source)
 	}
 	var items []*gofeed.Item
 	var last gofeed.Item
-	err = rw.store.Get(rw.md5Source, &last)
-	if err != nil && !strings.Contains(err.Error(), "NotFound") {
-		fmt.Printf("store get err %+v\n", err)
-		return err
+	isNew := false
+	val, err := rw.store.Get(rw.md5Source)
+	if err != nil && !errors.Is(err, kv.ErrNotFound) {
+		return errors.Wrap(err, "store get")
+	}
+
+	if errors.Is(err, kv.ErrNotFound) {
+		isNew = true
+	} else {
+		err = json.Unmarshal([]byte(val), &last)
+		if err != nil && !errors.Is(err, kv.ErrNotFound) {
+			return errors.Wrap(err, "store get unmarshal")
+		}
 	}
 
 	feedItems := feed.Items
@@ -105,8 +118,12 @@ func (rw *RSSWatcher) handle() error {
 		feedItems = feed.Items[rw.skip:]
 	}
 
-	if err != nil {
-		fmt.Printf("store get err %+v\n", err)
+	if len(feedItems) == 0 {
+		return errors.New("feed length = 0")
+	}
+
+	if isNew {
+		level.Info(rw.logger).Log("msg", "new feed")
 		items = append(items, feedItems[0])
 	} else {
 		for i, item := range feedItems {
@@ -121,6 +138,11 @@ func (rw *RSSWatcher) handle() error {
 		}
 	}
 
+	if len(items) == 0 {
+		level.Info(rw.logger).Log("msg", "no new feed")
+		return nil
+	}
+
 	for _, item := range items {
 		msg := types.WrapMsg(&types.Message{
 			Title:   item.Title,
@@ -131,18 +153,21 @@ func (rw *RSSWatcher) handle() error {
 
 		for _, notifier := range rw.notifiers {
 			msgCp := msg.Clone()
-			fmt.Printf("notifier %s notify msg\n", notifier.GetName())
+			level.Info(rw.logger).Log("msg", fmt.Sprintf("notifier %s notify msg", notifier.GetName()))
 			err := notifier.Notify(msgCp)
 			if err != nil {
-				fmt.Printf("notify %s error: %+v\n", notifier.GetName(), err)
+				level.Error(rw.logger).Log("msg", fmt.Sprintf("notify %s error: %+v", notifier.GetName(), err))
 			}
 		}
 	}
 
-	if len(items) > 0 {
-		err = rw.store.Set(rw.md5Source, items[0])
+	bt, err := json.Marshal(items[0])
+	if err != nil {
+		level.Error(rw.logger).Log("msg", fmt.Sprintf("kv store save json marshal error: %+v", err))
+	} else {
+		err = rw.store.Set(rw.md5Source, string(bt))
 		if err != nil {
-			fmt.Printf("kv store add last item error: %+v\n", err)
+			level.Error(rw.logger).Log("msg", fmt.Sprintf("kv store add last item error: %+v", err))
 		}
 	}
 
