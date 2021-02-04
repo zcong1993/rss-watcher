@@ -8,17 +8,11 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/zcong1993/notifiers/adapters/printer"
+	"github.com/zcong1993/notifiers/v2"
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/oklog/run"
-
-	"github.com/zcong1993/notifiers/adapters/tg"
-
-	"github.com/zcong1993/notifiers/adapters/ding"
-	"github.com/zcong1993/notifiers/adapters/mail"
-	"github.com/zcong1993/notifiers/types"
 	"github.com/zcong1993/rss-watcher/pkg/config"
 	"github.com/zcong1993/rss-watcher/pkg/kv"
 	"github.com/zcong1993/rss-watcher/pkg/watcher"
@@ -59,9 +53,9 @@ func main() {
 
 	var (
 		kvStore      kv.Store
-		dingNotifier types.Notifier
-		mailNotifier types.Notifier
-		tgNotifier   types.Notifier
+		dingNotifier notifiers.Notifier
+		//mailNotifier notifiers.Notifier
+		tgNotifier notifiers.Notifier
 	)
 	switch cfg.KvStore {
 	case "mem":
@@ -77,17 +71,17 @@ func main() {
 	}
 
 	if cfg.DingConfig != nil {
-		dd := ding.NewClient(cfg.DingConfig.Token)
-		dd.SetLogger(log.WithPrefix(logger, "component", "dingding"))
+		dd := notifiers.NewDing(cfg.DingConfig.Webhook, cfg.DingConfig.Secret)
 		dingNotifier = dd
 	}
-	if cfg.MailConfig != nil {
-		mc := mail.NewClient(cfg.MailConfig.Domain, cfg.MailConfig.PrivateKey, cfg.MailConfig.To, cfg.MailConfig.From)
-		mc.SetLogger(log.WithPrefix(logger, "component", "mailgun"))
-		mailNotifier = mc
-	}
+
+	//if cfg.MailConfig != nil {
+	//	mc := mail.NewClient(cfg.MailConfig.Domain, cfg.MailConfig.PrivateKey, cfg.MailConfig.To, cfg.MailConfig.From)
+	//	mailNotifier = mc
+	//}
+
 	if cfg.TelegramConfig != nil {
-		tgNotifier, err = tg.NewClient(cfg.TelegramConfig.Token, cfg.TelegramConfig.ToID, log.WithPrefix(logger, "component", "tg"))
+		tgNotifier, err = notifiers.NewTelegram(cfg.TelegramConfig.Token, cfg.TelegramConfig.ToID)
 		if err != nil {
 			level.Error(logger).Log("msg", "init tg", "error", err.Error())
 			os.Exit(1)
@@ -99,17 +93,17 @@ func main() {
 		level.Info(logger).Log("msg", "run single and exit")
 		wg := sync.WaitGroup{}
 		for _, rw := range cfg.WatcherConfigs {
-			notifiers := make([]types.Notifier, 0)
+			ntfs := make([]notifiers.Notifier, 0)
 			for _, t := range rw.Notifiers {
 				switch t {
-				case "mail":
-					notifiers = append(notifiers, mailNotifier)
+				//case "mail":
+				//	notifiers = append(notifiers, mailNotifier)
 				case "ding":
-					notifiers = append(notifiers, dingNotifier)
+					ntfs = append(ntfs, dingNotifier)
 				case "tg":
-					notifiers = append(notifiers, tgNotifier)
+					ntfs = append(ntfs, tgNotifier)
 				case "printer":
-					notifiers = append(notifiers, printer.NewPrinter(os.Stderr))
+					ntfs = append(ntfs, notifiers.NewPrinter(os.Stderr))
 				}
 			}
 
@@ -117,7 +111,7 @@ func main() {
 
 			wg.Add(1)
 			go func() {
-				watcherClient := watcher.NewRSSWatcher(logger, rw.Source, rw.Interval.Duration, kvStore, notifiers, rw.Skip)
+				watcherClient := watcher.NewRSSWatcher(logger, rw.Source, rw.Interval.Duration, kvStore, ntfs, rw.Skip)
 				_ = watcherClient.Single(context.Background())
 				wg.Done()
 			}()
@@ -131,11 +125,11 @@ func main() {
 		var g run.Group
 
 		for _, rw := range cfg.WatcherConfigs {
-			notifiers := make([]types.Notifier, 0)
+			notifiers := make([]notifiers.Notifier, 0)
 			for _, t := range rw.Notifiers {
 				switch t {
-				case "mail":
-					notifiers = append(notifiers, mailNotifier)
+				//case "mail":
+				//	notifiers = append(notifiers, mailNotifier)
 				case "ding":
 					notifiers = append(notifiers, dingNotifier)
 				case "tg":

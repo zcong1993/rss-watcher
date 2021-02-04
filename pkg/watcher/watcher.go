@@ -14,7 +14,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/mmcdole/gofeed"
-	"github.com/zcong1993/notifiers/types"
+	"github.com/zcong1993/notifiers/v2"
 	"github.com/zcong1993/rss-watcher/pkg/kv"
 )
 
@@ -32,13 +32,13 @@ type RSSWatcher struct {
 	md5Source string
 	store     kv.Store
 	skip      int
-	notifiers []types.Notifier
+	notifiers []notifiers.Notifier
 	interval  time.Duration
 	closeCh   chan struct{}
 	parser    *gofeed.Parser
 }
 
-func NewRSSWatcher(logger log.Logger, source string, interval time.Duration, store kv.Store, notifiers []types.Notifier, skip int) *RSSWatcher {
+func NewRSSWatcher(logger log.Logger, source string, interval time.Duration, store kv.Store, notifiers []notifiers.Notifier, skip int) *RSSWatcher {
 	parser := gofeed.NewParser()
 	parser.Client = &http.Client{Timeout: time.Second * 10}
 	return &RSSWatcher{
@@ -147,17 +147,11 @@ func (rw *RSSWatcher) handle(ctx context.Context) error {
 	}
 
 	for _, item := range items {
-		msg := types.WrapMsg(&types.Message{
-			Title:   item.Title,
-			Content: normalizeContent(item.Description, 300),
-			Tags:    []string{"rss-watcher", rw.source},
-			URL:     item.Link,
-		})
+		msg := feed2Message(item)
 
 		for _, notifier := range rw.notifiers {
-			msgCp := msg.Clone()
 			level.Info(rw.logger).Log("msg", fmt.Sprintf("notifier %s notify msg", notifier.GetName()))
-			err := notifier.Notify(ctx, msgCp)
+			err := notifier.Notify(ctx, "", msg)
 			if err != nil {
 				level.Error(rw.logger).Log("msg", fmt.Sprintf("notify %s error: %+v", notifier.GetName(), err))
 			}
@@ -181,4 +175,16 @@ func (rw *RSSWatcher) closeCloser(closer io.Closer, name string) {
 	if err := closer.Close(); err != nil {
 		level.Error(rw.logger).Log("msg", fmt.Sprintf("%s close error", name), "error", err.Error())
 	}
+}
+
+func feed2Message(item *gofeed.Item) notifiers.Message {
+	content := fmt.Sprintf(`RSS-WATCHER
+
+%s
+
+%s
+
+%s`, item.Title, normalizeContent(item.Description, 300), item.Link)
+
+	return notifiers.Message{Content: content}
 }

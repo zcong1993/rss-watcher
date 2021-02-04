@@ -53,7 +53,8 @@ type Config struct {
 }
 
 type DingConfig struct {
-	Token string `json:"token" validate:"required"`
+	Webhook string `json:"webhook" validate:"required"`
+	Secret  string `json:"secret"`
 }
 
 type MailConfig struct {
