@@ -186,5 +186,5 @@ func feed2Message(item *gofeed.Item) notifiers.Message {
 
 %s`, item.Title, normalizeContent(item.Description, 300), item.Link)
 
-	return notifiers.Message{Content: content}
+	return notifiers.MessageFromContent(content)
 }

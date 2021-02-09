@@ -54,8 +54,8 @@ func main() {
 	var (
 		kvStore      kv.Store
 		dingNotifier notifiers.Notifier
-		//mailNotifier notifiers.Notifier
-		tgNotifier notifiers.Notifier
+		mailNotifier notifiers.Notifier
+		tgNotifier   notifiers.Notifier
 	)
 	switch cfg.KvStore {
 	case "mem":
@@ -75,10 +75,10 @@ func main() {
 		dingNotifier = dd
 	}
 
-	//if cfg.MailConfig != nil {
-	//	mc := mail.NewClient(cfg.MailConfig.Domain, cfg.MailConfig.PrivateKey, cfg.MailConfig.To, cfg.MailConfig.From)
-	//	mailNotifier = mc
-	//}
+	if cfg.MailConfig != nil {
+		mc := notifiers.NewMailer(cfg.MailConfig.Domain, cfg.MailConfig.PrivateKey, cfg.MailConfig.To, cfg.MailConfig.From)
+		mailNotifier = mc
+	}
 
 	if cfg.TelegramConfig != nil {
 		tgNotifier, err = notifiers.NewTelegram(cfg.TelegramConfig.Token, cfg.TelegramConfig.ToID)
@@ -96,8 +96,8 @@ func main() {
 			ntfs := make([]notifiers.Notifier, 0)
 			for _, t := range rw.Notifiers {
 				switch t {
-				//case "mail":
-				//	notifiers = append(notifiers, mailNotifier)
+				case "mail":
+					ntfs = append(ntfs, mailNotifier)
 				case "ding":
 					ntfs = append(ntfs, dingNotifier)
 				case "tg":
@@ -125,21 +125,21 @@ func main() {
 		var g run.Group
 
 		for _, rw := range cfg.WatcherConfigs {
-			notifiers := make([]notifiers.Notifier, 0)
+			ntfs := make([]notifiers.Notifier, 0)
 			for _, t := range rw.Notifiers {
 				switch t {
-				//case "mail":
-				//	notifiers = append(notifiers, mailNotifier)
+				case "mail":
+					ntfs = append(ntfs, mailNotifier)
 				case "ding":
-					notifiers = append(notifiers, dingNotifier)
+					ntfs = append(ntfs, dingNotifier)
 				case "tg":
-					notifiers = append(notifiers, tgNotifier)
+					ntfs = append(ntfs, tgNotifier)
 				}
 			}
 
 			rw := rw
 
-			watcherClient := watcher.NewRSSWatcher(logger, rw.Source, rw.Interval.Duration, kvStore, notifiers, rw.Skip)
+			watcherClient := watcher.NewRSSWatcher(logger, rw.Source, rw.Interval.Duration, kvStore, ntfs, rw.Skip)
 			g.Add(func() error {
 				watcherClient.Run(context.Background())
 				return nil
