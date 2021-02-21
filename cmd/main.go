@@ -27,6 +27,7 @@ var (
 
 func main() {
 	versionFlag := flag.Bool("v", false, "Show version")
+	serialize := flag.Bool("serialize", false, "If run serialize, only work in single mode.")
 	flag.Parse()
 
 	if *versionFlag {
@@ -52,10 +53,11 @@ func main() {
 	level.Info(logger).Log("msg", fmt.Sprintf("use kv store: %s", cfg.KvStore))
 
 	var (
-		kvStore      kv.Store
-		dingNotifier notifiers.Notifier
-		mailNotifier notifiers.Notifier
-		tgNotifier   notifiers.Notifier
+		kvStore         kv.Store
+		dingNotifier    notifiers.Notifier
+		mailNotifier    notifiers.Notifier
+		tgNotifier      notifiers.Notifier
+		printerNotifier notifiers.Notifier
 	)
 	switch cfg.KvStore {
 	case "mem":
@@ -70,84 +72,87 @@ func main() {
 		}
 	}
 
-	if cfg.DingConfig != nil {
-		dd := notifiers.NewDing(cfg.DingConfig.Webhook, cfg.DingConfig.Secret)
-		dingNotifier = dd
-	}
-
-	if cfg.MailConfig != nil {
-		mc := notifiers.NewMailer(cfg.MailConfig.Domain, cfg.MailConfig.PrivateKey, cfg.MailConfig.To, cfg.MailConfig.From)
-		mailNotifier = mc
-	}
-
-	if cfg.TelegramConfig != nil {
-		tgNotifier, err = notifiers.NewTelegram(cfg.TelegramConfig.Token, cfg.TelegramConfig.ToID)
-		if err != nil {
-			level.Error(logger).Log("msg", "init tg", "error", err.Error())
-			os.Exit(1)
+	for n := range config.GetUsedNotifiersMap(cfg) {
+		switch n {
+		case "ding":
+			dd := notifiers.NewDing(cfg.DingConfig.Webhook, cfg.DingConfig.Secret)
+			dingNotifier = dd
+		case "mail":
+			mc := notifiers.NewMailer(cfg.MailConfig.Domain, cfg.MailConfig.PrivateKey, cfg.MailConfig.To, cfg.MailConfig.From)
+			mailNotifier = mc
+		case "tg":
+			tgNotifier, err = notifiers.NewTelegram(cfg.TelegramConfig.Token, cfg.TelegramConfig.ToID)
+			if err != nil {
+				level.Error(logger).Log("msg", "init tg", "error", err.Error())
+				os.Exit(1)
+			}
+		case "printer":
+			pn := notifiers.NewPrinter(os.Stderr)
+			printerNotifier = pn
 		}
+	}
+
+	watchers := make([]*watcher.RSSWatcher, 0)
+
+	for _, rw := range cfg.WatcherConfigs {
+		ntfs := make([]notifiers.Notifier, 0)
+		for _, t := range rw.Notifiers {
+			switch t {
+			case "mail":
+				ntfs = append(ntfs, mailNotifier)
+			case "ding":
+				ntfs = append(ntfs, dingNotifier)
+			case "tg":
+				ntfs = append(ntfs, tgNotifier)
+			case "printer":
+				ntfs = append(ntfs, printerNotifier)
+			}
+		}
+
+		watcherClient := watcher.NewRSSWatcher(logger, rw.Source, rw.Interval.Duration, kvStore, notifiers.NewCombine(ntfs...), rw.Skip)
+		watchers = append(watchers, watcherClient)
 	}
 
 	// run single
 	if cfg.Single {
 		level.Info(logger).Log("msg", "run single and exit")
-		wg := sync.WaitGroup{}
-		for _, rw := range cfg.WatcherConfigs {
-			ntfs := make([]notifiers.Notifier, 0)
-			for _, t := range rw.Notifiers {
-				switch t {
-				case "mail":
-					ntfs = append(ntfs, mailNotifier)
-				case "ding":
-					ntfs = append(ntfs, dingNotifier)
-				case "tg":
-					ntfs = append(ntfs, tgNotifier)
-				case "printer":
-					ntfs = append(ntfs, notifiers.NewPrinter(os.Stderr))
-				}
+
+		if *serialize {
+			level.Info(logger).Log("msg", "run serialize")
+			for _, w := range watchers {
+				_ = w.Single(context.Background())
+			}
+		} else {
+			wg := sync.WaitGroup{}
+			for _, w := range watchers {
+				w := w
+				wg.Add(1)
+				go func() {
+					_ = w.Single(context.Background())
+					wg.Done()
+				}()
 			}
 
-			rw := rw
-
-			wg.Add(1)
-			go func() {
-				watcherClient := watcher.NewRSSWatcher(logger, rw.Source, rw.Interval.Duration, kvStore, ntfs, rw.Skip)
-				_ = watcherClient.Single(context.Background())
-				wg.Done()
-			}()
+			wg.Wait()
 		}
 
-		wg.Wait()
 		level.Info(logger).Log("msg", "done")
 		os.Exit(0)
 	} else {
 		// run as daemon
 		var g run.Group
 
-		for _, rw := range cfg.WatcherConfigs {
-			ntfs := make([]notifiers.Notifier, 0)
-			for _, t := range rw.Notifiers {
-				switch t {
-				case "mail":
-					ntfs = append(ntfs, mailNotifier)
-				case "ding":
-					ntfs = append(ntfs, dingNotifier)
-				case "tg":
-					ntfs = append(ntfs, tgNotifier)
-				}
-			}
+		for _, w := range watchers {
+			w := w
 
-			rw := rw
-
-			watcherClient := watcher.NewRSSWatcher(logger, rw.Source, rw.Interval.Duration, kvStore, ntfs, rw.Skip)
 			g.Add(func() error {
-				watcherClient.Run(context.Background())
+				w.Run(context.Background())
 				return nil
 			}, func(err error) {
 				if err != nil {
 					level.Error(logger).Log("msg", fmt.Sprintf("exit cause: %s", err))
 				}
-				watcherClient.Close()
+				w.Close()
 			})
 		}
 

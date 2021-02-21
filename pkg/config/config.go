@@ -101,11 +101,7 @@ func LoadConfigFromFile(f string) (*Config, error) {
 	return &config, err
 }
 
-func validateConfig(c *Config) error {
-	err := validator.New().Struct(c)
-	if err != nil {
-		return errors.Wrap(err, "validate config")
-	}
+func GetUsedNotifiersMap(c *Config) map[string]struct{} {
 	notifiers := make(map[string]struct{})
 	for _, rw := range c.WatcherConfigs {
 		for _, ntf := range rw.Notifiers {
@@ -121,6 +117,17 @@ func validateConfig(c *Config) error {
 			}
 		}
 	}
+	return notifiers
+}
+
+func validateConfig(c *Config) error {
+	err := validator.New().Struct(c)
+	if err != nil {
+		return errors.Wrap(err, "validate config")
+	}
+
+	notifiers := GetUsedNotifiersMap(c)
+
 	for k := range notifiers {
 		switch k {
 		case "ding":

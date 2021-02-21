@@ -32,13 +32,13 @@ type RSSWatcher struct {
 	md5Source string
 	store     kv.Store
 	skip      int
-	notifiers []notifiers.Notifier
+	notifier  notifiers.Notifier
 	interval  time.Duration
 	closeCh   chan struct{}
 	parser    *gofeed.Parser
 }
 
-func NewRSSWatcher(logger log.Logger, source string, interval time.Duration, store kv.Store, notifiers []notifiers.Notifier, skip int) *RSSWatcher {
+func NewRSSWatcher(logger log.Logger, source string, interval time.Duration, store kv.Store, notifier notifiers.Notifier, skip int) *RSSWatcher {
 	parser := gofeed.NewParser()
 	parser.Client = &http.Client{Timeout: time.Second * 10}
 	return &RSSWatcher{
@@ -47,7 +47,7 @@ func NewRSSWatcher(logger log.Logger, source string, interval time.Duration, sto
 		interval:  interval,
 		store:     store,
 		md5Source: fmt.Sprintf("%x", md5.Sum([]byte(source))),
-		notifiers: notifiers,
+		notifier:  notifier,
 		closeCh:   make(chan struct{}),
 		parser:    parser,
 		skip:      skip,
@@ -148,13 +148,10 @@ func (rw *RSSWatcher) handle(ctx context.Context) error {
 
 	for _, item := range items {
 		msg := feed2Message(item)
-
-		for _, notifier := range rw.notifiers {
-			level.Info(rw.logger).Log("msg", fmt.Sprintf("notifier %s notify msg", notifier.GetName()))
-			err := notifier.Notify(ctx, "", msg)
-			if err != nil {
-				level.Error(rw.logger).Log("msg", fmt.Sprintf("notify %s error: %+v", notifier.GetName(), err))
-			}
+		level.Info(rw.logger).Log("msg", fmt.Sprintf("notifier %s notify msg", rw.notifier.GetName()))
+		err := rw.notifier.Notify(ctx, "", msg)
+		if err != nil {
+			level.Error(rw.logger).Log("msg", fmt.Sprintf("notify %s error: %+v", rw.notifier.GetName(), err))
 		}
 	}
 
