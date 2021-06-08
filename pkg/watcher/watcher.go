@@ -37,6 +37,14 @@ func (p Items) Less(i, j int) bool {
 }
 func (p Items) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
 
+func getItemId(item *gofeed.Item) string {
+	if len(item.GUID) > 0 {
+		return item.GUID
+	}
+
+	return item.Link
+}
+
 func normalizeContent(content string, length int) string {
 	sl := len(content)
 	if sl <= length {
@@ -116,7 +124,7 @@ func (rw *RSSWatcher) handle(ctx context.Context) error {
 	}
 	var items []*gofeed.Item
 	isNew := false
-	lastLink, err := rw.store.Get(ctx, rw.md5Source)
+	lastItemId, err := rw.store.Get(ctx, rw.md5Source)
 	if err != nil && !errors.Is(err, kv.ErrNotFound) {
 		return errors.Wrap(err, "store get")
 	}
@@ -147,7 +155,7 @@ func (rw *RSSWatcher) handle(ctx context.Context) error {
 		items = append(items, feedItems[0])
 	} else {
 		for i, item := range feedItems {
-			if item.Link == lastLink {
+			if getItemId(item) == lastItemId {
 				break
 			}
 			if i > 4 {
@@ -172,7 +180,7 @@ func (rw *RSSWatcher) handle(ctx context.Context) error {
 		}
 	}
 
-	err = rw.store.Set(ctx, rw.md5Source, items[0].Link)
+	err = rw.store.Set(ctx, rw.md5Source, getItemId(items[0]))
 	if err != nil {
 		level.Error(rw.logger).Log("msg", fmt.Sprintf("kv store add last item error: %+v", err))
 	}
