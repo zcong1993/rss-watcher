@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sort"
 	"time"
 
 	"github.com/go-kit/kit/log"
@@ -17,6 +18,25 @@ import (
 	"github.com/zcong1993/notifiers/v2"
 	"github.com/zcong1993/rss-watcher/pkg/kv"
 )
+
+// sort items by date desc
+type Items []*gofeed.Item
+
+func (p Items) Len() int { return len(p) }
+func (p Items) Less(i, j int) bool {
+	iDate := p[i].PublishedParsed
+	if iDate == nil {
+		iDate = p[i].UpdatedParsed
+	}
+
+	jDate := p[j].PublishedParsed
+	if jDate == nil {
+		jDate = p[j].UpdatedParsed
+	}
+
+	return iDate.After(*jDate)
+}
+func (p Items) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
 
 func normalizeContent(content string, length int) string {
 	sl := len(content)
@@ -113,6 +133,10 @@ func (rw *RSSWatcher) handle(ctx context.Context) error {
 	}
 
 	feedItems := feed.Items
+	sort.Sort(Items(feedItems))
+
+	//js, _ := json.Marshal(feedItems)
+	//fmt.Println(string(js))
 
 	if rw.skip > 0 {
 		if len(feedItems) < rw.skip {
