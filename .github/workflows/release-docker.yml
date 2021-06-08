@@ -5,7 +5,7 @@ on:
   push:
 
 jobs:
-  goreleaser:
+  docker-releaser:
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
     steps:
