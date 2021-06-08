@@ -3,7 +3,6 @@ package watcher
 import (
 	"context"
 	"crypto/md5"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -116,20 +115,14 @@ func (rw *RSSWatcher) handle(ctx context.Context) error {
 		return errors.Wrapf(err, "get feed error, url: %s", rw.source)
 	}
 	var items []*gofeed.Item
-	var last gofeed.Item
 	isNew := false
-	val, err := rw.store.Get(ctx, rw.md5Source)
+	lastLink, err := rw.store.Get(ctx, rw.md5Source)
 	if err != nil && !errors.Is(err, kv.ErrNotFound) {
 		return errors.Wrap(err, "store get")
 	}
 
 	if errors.Is(err, kv.ErrNotFound) {
 		isNew = true
-	} else {
-		err = json.Unmarshal([]byte(val), &last)
-		if err != nil && !errors.Is(err, kv.ErrNotFound) {
-			return errors.Wrap(err, "store get unmarshal")
-		}
 	}
 
 	feedItems := feed.Items
@@ -154,7 +147,7 @@ func (rw *RSSWatcher) handle(ctx context.Context) error {
 		items = append(items, feedItems[0])
 	} else {
 		for i, item := range feedItems {
-			if item.Link == last.Link {
+			if item.Link == lastLink {
 				break
 			}
 			if i > 4 {
@@ -179,14 +172,9 @@ func (rw *RSSWatcher) handle(ctx context.Context) error {
 		}
 	}
 
-	bt, err := json.Marshal(items[0])
+	err = rw.store.Set(ctx, rw.md5Source, items[0].Link)
 	if err != nil {
-		level.Error(rw.logger).Log("msg", fmt.Sprintf("kv store save json marshal error: %+v", err))
-	} else {
-		err = rw.store.Set(ctx, rw.md5Source, string(bt))
-		if err != nil {
-			level.Error(rw.logger).Log("msg", fmt.Sprintf("kv store add last item error: %+v", err))
-		}
+		level.Error(rw.logger).Log("msg", fmt.Sprintf("kv store add last item error: %+v", err))
 	}
 
 	return nil
