@@ -88,7 +88,8 @@ func (rw *RSSWatcher) Single(ctx context.Context) error {
 		return err
 	}
 
-	return rw.notifier.Close()
+	rw.notifier.Wait()
+	return nil
 }
 
 func (rw *RSSWatcher) Run(ctx context.Context) {

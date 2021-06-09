@@ -290,6 +290,8 @@ github.com/zcong1993/notifiers/v2 v2.0.1 h1:mw1+xXH7XnN3KBMZMKMnqGort/3RmYRHO7uT
 github.com/zcong1993/notifiers/v2 v2.0.1/go.mod h1:Q9oYNkti1Mq0N0O/avcuru2ZJxoWqIl/WawjzGpnIso=
 github.com/zcong1993/notifiers/v2 v2.0.2 h1:wJ0jplbZZ/EYRZH3BMQ0GFIrSfZPkikmtnzxuxQ78So=
 github.com/zcong1993/notifiers/v2 v2.0.2/go.mod h1:Q9oYNkti1Mq0N0O/avcuru2ZJxoWqIl/WawjzGpnIso=
+github.com/zcong1993/notifiers/v2 v2.1.0 h1:4FU8dZEgXWlWmYD+CVyblkOSeXSmiKdbfOl2VKUUKuU=
+github.com/zcong1993/notifiers/v2 v2.1.0/go.mod h1:Q9oYNkti1Mq0N0O/avcuru2ZJxoWqIl/WawjzGpnIso=
 go.etcd.io/bbolt v1.3.3/go.mod h1:IbVyRI1SCnLcuJnV2u8VeU0CEYM7e686BmAb1XKL+uU=
 go.etcd.io/etcd v0.0.0-20191023171146-3cf2f69b5738/go.mod h1:dnLIgRNXwCJa5e+c6mIZCrds/GIG4ncV9HhK5PX7jPg=
 go.opencensus.io v0.20.1/go.mod h1:6WKK9ahsWS3RSO+PY9ZHZUfv2irvY6gN279GOPZjmmk=
