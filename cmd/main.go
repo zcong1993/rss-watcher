@@ -28,6 +28,7 @@ var (
 func main() {
 	versionFlag := flag.Bool("v", false, "Show version")
 	serialize := flag.Bool("serialize", false, "If run serialize, only work in single mode.")
+	limitInterval := flag.Duration("limit", 0, "If sleep between notify messages.")
 	flag.Parse()
 
 	if *versionFlag {
@@ -109,7 +110,22 @@ func main() {
 			}
 		}
 
-		watcherClient := watcher.NewRSSWatcher(logger, rw.Source, rw.Interval.Duration, kvStore, notifiers.NewCombine(ntfs...), rw.Skip)
+		var finalNtfs notifiers.Notifier
+
+		finalNtfs = notifiers.NewCombine(ntfs...)
+
+		if *limitInterval > 0 {
+			level.Info(logger).Log("msg", "use limiter notifiers", "duration", limitInterval.String())
+			limiter := notifiers.NewLimiter(finalNtfs, *limitInterval, 10)
+			finalNtfs = limiter
+			go func() {
+				for err := range limiter.GetErrorCh() {
+					level.Error(logger).Log("name", limiter.GetName(), "error", err.Error())
+				}
+			}()
+		}
+
+		watcherClient := watcher.NewRSSWatcher(logger, rw.Source, rw.Interval.Duration, kvStore, finalNtfs, rw.Skip)
 		watchers = append(watchers, watcherClient)
 	}
 
@@ -128,7 +144,10 @@ func main() {
 				w := w
 				wg.Add(1)
 				go func() {
-					_ = w.Single(context.Background())
+					err := w.Single(context.Background())
+					if err != nil {
+						level.Error(logger).Log("msg", "run single", "error", err)
+					}
 					wg.Done()
 				}()
 			}

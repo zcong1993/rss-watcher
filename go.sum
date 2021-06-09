@@ -280,8 +280,16 @@ github.com/tmc/grpc-websocket-proxy v0.0.0-20170815181823-89b8d40f7ca8/go.mod h1
 github.com/urfave/cli v1.20.0/go.mod h1:70zkFmudgCuE/ngEzBv17Jvp/497gISqfk5gWijbERA=
 github.com/urfave/cli v1.22.1/go.mod h1:Gos4lmkARVdJ6EkW0WaNv/tZAAMe9V7XWyB60NtXRu0=
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
+github.com/zcong1993/notifiers/v2 v2.0.0 h1:uhOBODlDiAxCjqWP2qhb71YaDz831SPQ98KJoF4IHzM=
+github.com/zcong1993/notifiers/v2 v2.0.0/go.mod h1:vptaSW0KGaXa3gJUJ08fDNX4rxGqTUfBtKB7+hp9SAI=
 github.com/zcong1993/notifiers/v2 v2.0.1-0.20210306064915-d536da0b21ee h1:eAlVsON73pk4FRKDrqSt3Y8ge6aaZJ8rLiNk4/imVcE=
 github.com/zcong1993/notifiers/v2 v2.0.1-0.20210306064915-d536da0b21ee/go.mod h1:Q9oYNkti1Mq0N0O/avcuru2ZJxoWqIl/WawjzGpnIso=
+github.com/zcong1993/notifiers/v2 v2.0.1-0.20210609095236-1060a6b32838 h1:5tcwH6BSOkmTaJCIHzTuVba8ZajZkTh6xK0+VxTPXCA=
+github.com/zcong1993/notifiers/v2 v2.0.1-0.20210609095236-1060a6b32838/go.mod h1:Q9oYNkti1Mq0N0O/avcuru2ZJxoWqIl/WawjzGpnIso=
+github.com/zcong1993/notifiers/v2 v2.0.1 h1:mw1+xXH7XnN3KBMZMKMnqGort/3RmYRHO7uTQCuyzIs=
+github.com/zcong1993/notifiers/v2 v2.0.1/go.mod h1:Q9oYNkti1Mq0N0O/avcuru2ZJxoWqIl/WawjzGpnIso=
+github.com/zcong1993/notifiers/v2 v2.0.2 h1:wJ0jplbZZ/EYRZH3BMQ0GFIrSfZPkikmtnzxuxQ78So=
+github.com/zcong1993/notifiers/v2 v2.0.2/go.mod h1:Q9oYNkti1Mq0N0O/avcuru2ZJxoWqIl/WawjzGpnIso=
 go.etcd.io/bbolt v1.3.3/go.mod h1:IbVyRI1SCnLcuJnV2u8VeU0CEYM7e686BmAb1XKL+uU=
 go.etcd.io/etcd v0.0.0-20191023171146-3cf2f69b5738/go.mod h1:dnLIgRNXwCJa5e+c6mIZCrds/GIG4ncV9HhK5PX7jPg=
 go.opencensus.io v0.20.1/go.mod h1:6WKK9ahsWS3RSO+PY9ZHZUfv2irvY6gN279GOPZjmmk=

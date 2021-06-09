@@ -87,7 +87,8 @@ func (rw *RSSWatcher) Single(ctx context.Context) error {
 		level.Error(rw.logger).Log("msg", fmt.Sprintf("rss watcher handle error: %s", err))
 		return err
 	}
-	return nil
+
+	return rw.notifier.Close()
 }
 
 func (rw *RSSWatcher) Run(ctx context.Context) {
