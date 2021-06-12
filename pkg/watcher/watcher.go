@@ -4,160 +4,112 @@ import (
 	"context"
 	"crypto/md5"
 	"fmt"
-	"io"
-	"net/http"
-	"sort"
 	"time"
 
-	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/log/level"
-	"github.com/pkg/errors"
+	"github.com/dapr/kit/logger"
 
 	"github.com/mmcdole/gofeed"
+	"github.com/pkg/errors"
 	"github.com/zcong1993/notifiers/v2"
-	"github.com/zcong1993/rss-watcher/pkg/kv"
+	"github.com/zcong1993/rss-watcher/pkg/rss"
+	"github.com/zcong1993/rss-watcher/pkg/store"
 )
 
-// sort items by date desc
-type Items []*gofeed.Item
-
-func (p Items) Len() int { return len(p) }
-func (p Items) Less(i, j int) bool {
-	iDate := p[i].PublishedParsed
-	if iDate == nil {
-		iDate = p[i].UpdatedParsed
-	}
-
-	jDate := p[j].PublishedParsed
-	if jDate == nil {
-		jDate = p[j].UpdatedParsed
-	}
-
-	return iDate.After(*jDate)
-}
-func (p Items) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
-
-func getItemId(item *gofeed.Item) string {
-	if len(item.GUID) > 0 {
-		return item.GUID
-	}
-
-	return item.Link
+type Watcher struct {
+	store    store.Store
+	notifier notifiers.Notifier
+	url      string
+	md5URL   string
+	interval time.Duration
+	stopCh   chan struct{}
+	logger   logger.Logger
 }
 
-func normalizeContent(content string, length int) string {
-	sl := len(content)
-	if sl <= length {
-		return content
+func NewWatcher(logger logger.Logger, url string, store store.Store, notifier notifiers.Notifier, interval time.Duration) *Watcher {
+	w := &Watcher{
+		store:    store,
+		notifier: notifier,
+		url:      url,
+		md5URL:   fmt.Sprintf("%x", md5.Sum([]byte(url))),
+		interval: interval,
+		stopCh:   make(chan struct{}, 1),
+		logger:   logger,
 	}
-	return content[:length] + "..."
+
+	return w
 }
 
-type RSSWatcher struct {
-	logger    log.Logger
-	source    string
-	md5Source string
-	store     kv.Store
-	skip      int
-	notifier  notifiers.Notifier
-	interval  time.Duration
-	closeCh   chan struct{}
-	parser    *gofeed.Parser
-}
+func (w *Watcher) Run() {
+	t := time.NewTicker(w.interval)
+	defer t.Stop()
 
-func NewRSSWatcher(logger log.Logger, source string, interval time.Duration, store kv.Store, notifier notifiers.Notifier, skip int) *RSSWatcher {
-	parser := gofeed.NewParser()
-	parser.Client = &http.Client{Timeout: time.Second * 10}
-	return &RSSWatcher{
-		logger:    log.WithPrefix(logger, "component", "watcher", "source", source),
-		source:    source,
-		interval:  interval,
-		store:     store,
-		md5Source: fmt.Sprintf("%x", md5.Sum([]byte(source))),
-		notifier:  notifier,
-		closeCh:   make(chan struct{}),
-		parser:    parser,
-		skip:      skip,
+	for {
+		ctx, cancel := context.WithCancel(context.Background())
+		err := w.handle(ctx)
+
+		if err != nil {
+			w.logger.Errorf("rss watcher handle error: %s", err.Error())
+		}
+
+		select {
+		case <-w.stopCh:
+			cancel()
+			w.logger.Infof("source for %s watcher exit", w.url)
+
+			return
+		case <-t.C:
+		}
 	}
 }
 
-func (rw *RSSWatcher) Single(ctx context.Context) error {
-	err := rw.handle(ctx)
+func (w *Watcher) Single(ctx context.Context) error {
+	err := w.handle(ctx)
 	if err != nil {
-		level.Error(rw.logger).Log("msg", fmt.Sprintf("rss watcher handle error: %s", err))
+		w.logger.Errorf("rss watcher handle error: %s", err.Error())
+
 		return err
 	}
 
-	rw.notifier.Wait()
+	w.notifier.Wait()
+
 	return nil
 }
 
-func (rw *RSSWatcher) Run(ctx context.Context) {
-	t := time.NewTicker(rw.interval)
-	defer t.Stop()
-	err := rw.handle(ctx)
-	if err != nil {
-		level.Error(rw.logger).Log("msg", fmt.Sprintf("rss watcher handle error: %s", err))
-	}
-	for {
-		select {
-		case <-t.C:
-			err := rw.handle(ctx)
-			if err != nil {
-				level.Error(rw.logger).Log("msg", fmt.Sprintf("rss watcher handle error: %s", err))
-			}
-		case <-rw.closeCh:
-			level.Info(rw.logger).Log("msg", fmt.Sprintf("source for %s watcher exit", rw.source))
-			return
-		}
-	}
+func (w *Watcher) Close() {
+	_ = w.store.Close()
+	close(w.stopCh)
 }
 
-func (rw *RSSWatcher) Close() {
-	rw.closeCloser(rw.store, "store")
-	close(rw.closeCh)
-}
+func (w *Watcher) handle(ctx context.Context) error {
+	w.logger.Info("run tick")
 
-func (rw *RSSWatcher) handle(ctx context.Context) error {
-	level.Info(rw.logger).Log("msg", fmt.Sprintf("run tick %s", time.Now().String()))
-	feed, err := rw.parser.ParseURL(rw.source)
+	feedItems, err := rss.GetFeedItems(w.url)
+
 	if err != nil {
-		return errors.Wrapf(err, "get feed error, url: %s", rw.source)
+		return errors.Wrap(err, "get feed")
 	}
-	var items []*gofeed.Item
-	isNew := false
-	lastItemId, err := rw.store.Get(ctx, rw.md5Source)
-	if err != nil && !errors.Is(err, kv.ErrNotFound) {
+
+	lastItemID, err := w.store.Get(ctx, w.md5URL)
+
+	if err != nil && !errors.Is(err, store.ErrNotFound) {
 		return errors.Wrap(err, "store get")
 	}
 
-	if errors.Is(err, kv.ErrNotFound) {
-		isNew = true
-	}
-
-	feedItems := feed.Items
-	sort.Sort(Items(feedItems))
-
-	//js, _ := json.Marshal(feedItems)
-	//fmt.Println(string(js))
-
-	if rw.skip > 0 {
-		if len(feedItems) < rw.skip {
-			return errors.New("feed length less than skip")
-		}
-		feedItems = feed.Items[rw.skip:]
-	}
+	isNew := errors.Is(err, store.ErrNotFound)
 
 	if len(feedItems) == 0 {
-		return errors.New("feed length = 0")
+		return errors.New("empty feed items")
 	}
 
+	items := make([]*gofeed.Item, 0)
+
 	if isNew {
-		level.Info(rw.logger).Log("msg", "new feed")
+		w.logger.Info("new feed source")
+
 		items = append(items, feedItems[0])
 	} else {
 		for i, item := range feedItems {
-			if getItemId(item) == lastItemId {
+			if rss.GetItemId(item) == lastItemID {
 				break
 			}
 			if i > 4 {
@@ -169,40 +121,43 @@ func (rw *RSSWatcher) handle(ctx context.Context) error {
 	}
 
 	if len(items) == 0 {
-		level.Info(rw.logger).Log("msg", "no new feed")
+		w.logger.Info("no new feed")
+
 		return nil
 	}
 
 	for _, item := range items {
 		msg := feed2Message(item)
-		level.Info(rw.logger).Log("msg", fmt.Sprintf("notifier %s notify msg", rw.notifier.GetName()))
-		err := rw.notifier.Notify(ctx, "", msg)
+
+		w.logger.Infof("notifier %s notify msg", w.notifier.GetName())
+		err := w.notifier.Notify(ctx, "", msg)
+
 		if err != nil {
-			level.Error(rw.logger).Log("msg", fmt.Sprintf("notify %s error: %+v", rw.notifier.GetName(), err))
+			w.logger.Errorf("notify %s error: %+v", w.notifier.GetName(), err)
 		}
 	}
 
-	err = rw.store.Set(ctx, rw.md5Source, getItemId(items[0]))
+	err = w.store.Set(ctx, w.md5URL, rss.GetItemId(items[0]))
 	if err != nil {
-		level.Error(rw.logger).Log("msg", fmt.Sprintf("kv store add last item error: %+v", err))
+		w.logger.Errorf("kv store add last item error: %+v", err)
 	}
 
 	return nil
 }
 
-func (rw *RSSWatcher) closeCloser(closer io.Closer, name string) {
-	if err := closer.Close(); err != nil {
-		level.Error(rw.logger).Log("msg", fmt.Sprintf("%s close error", name), "error", err.Error())
+func normalizeContent(content string, length int) string {
+	sl := len(content)
+	if sl <= length {
+		return content
 	}
+
+	return content[:length] + "..."
 }
 
 func feed2Message(item *gofeed.Item) notifiers.Message {
 	content := fmt.Sprintf(`RSS-WATCHER
-
 %s
-
 %s
-
 %s`, item.Title, normalizeContent(item.Description, 300), item.Link)
 
 	return notifiers.MessageFromContent(content)
