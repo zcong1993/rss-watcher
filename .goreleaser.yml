@@ -36,4 +36,4 @@ brews:
     homepage: https://github.com/zcong1993/rss-watcher
     description: Watch rss source
     test: |
-      system "#{bin}/rss-watcher -v"
+      system "#{bin}/rss-watcher --version"
