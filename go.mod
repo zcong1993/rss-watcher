@@ -8,7 +8,6 @@ require (
 	github.com/dapr/kit v0.0.1
 	github.com/fauna/faunadb-go/v3 v3.0.0
 	github.com/go-playground/validator/v10 v10.6.1
-	github.com/hashicorp/go-multierror v1.1.1
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/mmcdole/gofeed v1.1.3
 	github.com/oklog/run v1.1.0

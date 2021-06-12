@@ -11,7 +11,6 @@ import (
 	"github.com/oklog/run"
 
 	"github.com/dapr/kit/logger"
-	"github.com/hashicorp/go-multierror"
 	"github.com/zcong1993/notifiers/v2"
 	"github.com/zcong1993/rss-watcher/pkg/notify"
 	"github.com/zcong1993/rss-watcher/pkg/watcher"
@@ -163,15 +162,11 @@ func (r *RssWatcherRuntime) loadNotifiers() error {
 		}
 	}
 
-	var merr error
-
 	for n := range usedNotifiers {
 		nn, err := r.notifiersRegistry.Create(n)
 
 		if err != nil {
-			multierror.Append(merr, err)
-
-			continue
+			return err
 		}
 
 		if nn != nil {
@@ -203,14 +198,14 @@ func (r *RssWatcherRuntime) loadNotifiers() error {
 			err := nn.Init(config)
 
 			if err != nil {
-				multierror.Append(merr, errors.Wrapf(err, "error init notifier: %s", n))
+				return errors.Wrapf(err, "error init notifier: %s", n)
 			}
 
 			r.notifiers[n] = nn
 		}
 	}
 
-	return merr
+	return nil
 }
 
 func (r *RssWatcherRuntime) initWatchers() {
