@@ -9,7 +9,7 @@ import (
 	"github.com/zcong1993/rss-watcher/pkg/store"
 )
 
-const Name = "fanua"
+const Name = "fauna"
 
 type Store struct {
 	client     *faunadb.FaunaClient
