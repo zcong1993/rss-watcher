@@ -48,13 +48,13 @@ func (w *Watcher) Run() {
 		err := w.handle(ctx)
 
 		if err != nil {
-			w.logger.Errorf("rss watcher handle error: %s", err.Error())
+			w.logger.Errorf(w.withSource("rss watcher handle error: %s"), err.Error())
 		}
 
 		select {
 		case <-w.stopCh:
 			cancel()
-			w.logger.Infof("source for %s watcher exit", w.url)
+			w.logger.Info(w.withSource("watcher exit"))
 
 			return
 		case <-t.C:
@@ -65,7 +65,7 @@ func (w *Watcher) Run() {
 func (w *Watcher) Single(ctx context.Context) error {
 	err := w.handle(ctx)
 	if err != nil {
-		w.logger.Errorf("rss watcher handle error: %s", err.Error())
+		w.logger.Errorf(w.withSource("rss watcher handle error: %s"), err.Error())
 
 		return err
 	}
@@ -81,7 +81,7 @@ func (w *Watcher) Close() {
 }
 
 func (w *Watcher) handle(ctx context.Context) error {
-	w.logger.Info("run tick")
+	w.logger.Infof(w.withSource("run tick %s"), time.Now().String())
 
 	feedItems, err := rss.GetFeedItems(w.url)
 
@@ -104,7 +104,7 @@ func (w *Watcher) handle(ctx context.Context) error {
 	items := make([]*gofeed.Item, 0)
 
 	if isNew {
-		w.logger.Info("new feed source")
+		w.logger.Info(w.withSource("new feed source"))
 
 		items = append(items, feedItems[0])
 	} else {
@@ -121,7 +121,7 @@ func (w *Watcher) handle(ctx context.Context) error {
 	}
 
 	if len(items) == 0 {
-		w.logger.Info("no new feed")
+		w.logger.Info(w.withSource("no new feed"))
 
 		return nil
 	}
@@ -129,20 +129,24 @@ func (w *Watcher) handle(ctx context.Context) error {
 	for _, item := range items {
 		msg := feed2Message(item)
 
-		w.logger.Infof("notifier %s notify msg", w.notifier.GetName())
+		w.logger.Infof(w.withSource("notifier %s notify msg"), w.notifier.GetName())
 		err := w.notifier.Notify(ctx, "", msg)
 
 		if err != nil {
-			w.logger.Errorf("notify %s error: %+v", w.notifier.GetName(), err)
+			w.logger.Errorf(w.withSource("notify %s error: %+v"), w.notifier.GetName(), err)
 		}
 	}
 
 	err = w.store.Set(ctx, w.md5URL, rss.GetItemId(items[0]))
 	if err != nil {
-		w.logger.Errorf("kv store add last item error: %+v", err)
+		w.logger.Errorf(w.withSource("kv store add last item error: %+v"), err)
 	}
 
 	return nil
+}
+
+func (w *Watcher) withSource(msg string) string {
+	return fmt.Sprintf("source: %s ", w.url) + msg
 }
 
 func normalizeContent(content string, length int) string {
