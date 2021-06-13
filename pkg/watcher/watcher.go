@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/dapr/kit/logger"
+	"github.com/zcong1993/rss-watcher/pkg/logger"
 
 	"github.com/mmcdole/gofeed"
 	"github.com/pkg/errors"
@@ -22,10 +22,10 @@ type Watcher struct {
 	md5URL   string
 	interval time.Duration
 	stopCh   chan struct{}
-	logger   logger.Logger
+	logger   *logger.Logger
 }
 
-func NewWatcher(logger logger.Logger, url string, store store.Store, notifier notifiers.Notifier, interval time.Duration) *Watcher {
+func NewWatcher(logger *logger.Logger, url string, store store.Store, notifier notifiers.Notifier, interval time.Duration) *Watcher {
 	w := &Watcher{
 		store:    store,
 		notifier: notifier,
@@ -33,7 +33,7 @@ func NewWatcher(logger logger.Logger, url string, store store.Store, notifier no
 		md5URL:   fmt.Sprintf("%x", md5.Sum([]byte(url))),
 		interval: interval,
 		stopCh:   make(chan struct{}, 1),
-		logger:   logger,
+		logger:   logger.WithField("source", url),
 	}
 
 	return w
@@ -48,13 +48,13 @@ func (w *Watcher) Run() {
 		err := w.handle(ctx)
 
 		if err != nil {
-			w.logger.Errorf(w.withSource("rss watcher handle error: %s"), err.Error())
+			w.logger.Errorf("rss watcher handle error: %s", err.Error())
 		}
 
 		select {
 		case <-w.stopCh:
 			cancel()
-			w.logger.Info(w.withSource("watcher exit"))
+			w.logger.Info("watcher exit")
 
 			return
 		case <-t.C:
@@ -65,7 +65,7 @@ func (w *Watcher) Run() {
 func (w *Watcher) Single(ctx context.Context) error {
 	err := w.handle(ctx)
 	if err != nil {
-		w.logger.Errorf(w.withSource("rss watcher handle error: %s"), err.Error())
+		w.logger.Errorf("rss watcher handle error: %s", err.Error())
 
 		return err
 	}
@@ -81,7 +81,7 @@ func (w *Watcher) Close() {
 }
 
 func (w *Watcher) handle(ctx context.Context) error {
-	w.logger.Infof(w.withSource("run tick %s"), time.Now().String())
+	w.logger.Infof("run tick %s", time.Now().String())
 
 	feedItems, err := rss.GetFeedItems(w.url)
 
@@ -104,7 +104,7 @@ func (w *Watcher) handle(ctx context.Context) error {
 	items := make([]*gofeed.Item, 0)
 
 	if isNew {
-		w.logger.Info(w.withSource("new feed source"))
+		w.logger.Info("new feed source")
 
 		items = append(items, feedItems[0])
 	} else {
@@ -121,7 +121,7 @@ func (w *Watcher) handle(ctx context.Context) error {
 	}
 
 	if len(items) == 0 {
-		w.logger.Info(w.withSource("no new feed"))
+		w.logger.Info("no new feed")
 
 		return nil
 	}
@@ -129,24 +129,20 @@ func (w *Watcher) handle(ctx context.Context) error {
 	for _, item := range items {
 		msg := feed2Message(item)
 
-		w.logger.Infof(w.withSource("notifier %s notify msg"), w.notifier.GetName())
+		w.logger.Infof("notifier %s notify msg", w.notifier.GetName())
 		err := w.notifier.Notify(ctx, "", msg)
 
 		if err != nil {
-			w.logger.Errorf(w.withSource("notify %s error: %+v"), w.notifier.GetName(), err)
+			w.logger.Errorf("notify %s error: %+v", w.notifier.GetName(), err)
 		}
 	}
 
 	err = w.store.Set(ctx, w.md5URL, rss.GetItemId(items[0]))
 	if err != nil {
-		w.logger.Errorf(w.withSource("kv store add last item error: %+v"), err)
+		w.logger.Errorf("kv store add last item error: %+v", err)
 	}
 
 	return nil
-}
-
-func (w *Watcher) withSource(msg string) string {
-	return fmt.Sprintf("source: %s ", w.url) + msg
 }
 
 func normalizeContent(content string, length int) string {

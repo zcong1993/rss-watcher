@@ -8,9 +8,10 @@ import (
 	"sync"
 	"syscall"
 
+	"github.com/zcong1993/rss-watcher/pkg/logger"
+
 	"github.com/oklog/run"
 
-	"github.com/dapr/kit/logger"
 	"github.com/zcong1993/notifiers/v2"
 	"github.com/zcong1993/rss-watcher/pkg/notify"
 	"github.com/zcong1993/rss-watcher/pkg/watcher"
@@ -29,12 +30,12 @@ type RssWatcherRuntime struct {
 	notifiersRegistry notify.Registry
 	notifiers         map[string]notify.Notifier
 	config            *Config
-	logger            logger.Logger
+	logger            *logger.Logger
 	watchers          []*watcher.Watcher
 	runtimeOpts       *runtimeOpts
 }
 
-func NewRssWatcherRuntime(logger logger.Logger) *RssWatcherRuntime {
+func NewRssWatcherRuntime(logger *logger.Logger) *RssWatcherRuntime {
 	return &RssWatcherRuntime{
 		storeRegistry:     store.NewRegistry(),
 		stores:            map[string]store.Store{},

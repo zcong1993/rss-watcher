@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"runtime/debug"
 
-	"github.com/dapr/kit/logger"
+	"github.com/zcong1993/rss-watcher/pkg/logger"
 
 	"github.com/zcong1993/rss-watcher/pkg/notify"
 
@@ -16,8 +17,6 @@ import (
 	"github.com/zcong1993/rss-watcher/pkg/store/mem"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
-
-var log = logger.NewLogger("rss-watcher")
 
 // nolint: gochecknoglobals
 var (
@@ -31,8 +30,6 @@ var (
 	app = kingpin.New("rss-watcher", "Watcher rss source and notify new.")
 
 	configFile    = app.Flag("config", "Config file path.").Required().String()
-	logLevel      = app.Flag("log-level", "Options are debug, info, warn, error, or fatal").Default("info").String()
-	logAsJSON     = app.Flag("log-as-json", "Print log as JSON (default false)").Bool()
 	limitInterval = app.Flag("limit", "If sleep between notify messages.").Duration()
 
 	singleCmd = app.Command("single", "Run single and exit.")
@@ -42,22 +39,18 @@ var (
 )
 
 func main() {
-	logger.DaprVersion = version
+	optFn := logger.BindKingpinFlags(app)
 
 	app.Version(buildVersion(version, commit, date, builtBy))
 	cmd := kingpin.MustParse(app.Parse(os.Args[1:]))
 
-	loggerOptions := logger.DefaultOptions()
-	loggerOptions.OutputLevel = *logLevel
-	loggerOptions.JSONFormatEnabled = *logAsJSON
+	l, err := logger.NewLogger("rss-watcher", optFn())
 
-	if err := logger.ApplyOptionsToLoggers(&loggerOptions); err != nil {
+	if err != nil {
 		log.Fatalf("init logger error: %s", err.Error())
 	}
 
-	log.Infof("log level set to: %s", loggerOptions.OutputLevel)
-
-	r := runtime.NewRssWatcherRuntime(log)
+	r := runtime.NewRssWatcherRuntime(l)
 
 	opts := []runtime.Option{
 		runtime.WithLimitInterval(*limitInterval),
@@ -94,13 +87,13 @@ func main() {
 	}
 
 	if cmd == daemonCmd.FullCommand() {
-		log.Info("run as daemon")
+		l.Info("run as daemon")
 	}
 
-	err := r.Run(opts...)
+	err = r.Run(opts...)
 
 	if err != nil {
-		log.Fatalf("fatal error from runtime: %s", err)
+		l.Fatalf("fatal error from runtime: %s", err)
 	}
 }
 
