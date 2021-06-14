@@ -302,5 +302,36 @@ func (r *RssWatcherRuntime) daemon() error {
 		})
 	}
 
+	// close store and notifiers before exit
+	ctx, cancel := context.WithCancel(context.Background())
+
+	g.Add(func() error {
+		<-ctx.Done()
+
+		return nil
+	}, func(err error) {
+		r.logger.Debug("close store and notifiers before exit")
+
+		for name, s := range r.stores {
+			r.logger.Debugf("close store %s", name)
+
+			err := s.Close()
+			if err != nil {
+				r.logger.Errorf("close store name: %s, err: %s", name, err.Error())
+			}
+		}
+
+		for name, n := range r.notifiers {
+			r.logger.Debugf("close notifier %s", name)
+
+			err := n.Close()
+			if err != nil {
+				r.logger.Errorf("close notifier name: %s, err: %s", name, err.Error())
+			}
+		}
+
+		cancel()
+	})
+
 	return g.Run()
 }

@@ -76,7 +76,6 @@ func (w *Watcher) Single(ctx context.Context) error {
 }
 
 func (w *Watcher) Close() {
-	_ = w.store.Close()
 	close(w.stopCh)
 }
 
