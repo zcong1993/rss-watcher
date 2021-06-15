@@ -47,8 +47,7 @@ func NewRssWatcherRuntime(logger *logger.Logger) *RssWatcherRuntime {
 }
 
 func (r *RssWatcherRuntime) Run(opts ...Option) error {
-	err := r.initRuntime(opts...)
-	if err != nil {
+	if err := r.initRuntime(opts...); err != nil {
 		return err
 	}
 
@@ -302,7 +301,7 @@ func (r *RssWatcherRuntime) daemon() error {
 		})
 	}
 
-	// close store and notifiers before exit
+	// close store and notifiers before exit.
 	ctx, cancel := context.WithCancel(context.Background())
 
 	g.Add(func() error {

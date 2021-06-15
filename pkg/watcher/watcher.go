@@ -63,8 +63,7 @@ func (w *Watcher) Run() {
 }
 
 func (w *Watcher) Single(ctx context.Context) error {
-	err := w.handle(ctx)
-	if err != nil {
+	if err := w.handle(ctx); err != nil {
 		w.logger.Errorf("rss watcher handle error: %s", err.Error())
 
 		return err
@@ -112,7 +111,7 @@ func (w *Watcher) handle(ctx context.Context) error {
 				break
 			}
 			if i > 4 {
-				// max 5 items
+				// max 5 items.
 				break
 			}
 			items = append(items, item)
@@ -145,8 +144,7 @@ func (w *Watcher) handle(ctx context.Context) error {
 }
 
 func normalizeContent(content string, length int) string {
-	sl := len(content)
-	if sl <= length {
+	if len(content) <= length {
 		return content
 	}
 

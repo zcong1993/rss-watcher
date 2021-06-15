@@ -4,6 +4,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/sirupsen/logrus"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
@@ -52,7 +54,7 @@ func NewLogger(name string, option *Option) (*Logger, error) {
 	level, err := logrus.ParseLevel(option.OutputLevel)
 
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "parse level")
 	}
 
 	newLogger.SetLevel(level)

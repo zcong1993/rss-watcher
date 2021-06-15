@@ -2,6 +2,7 @@ package rss
 
 import (
 	"sort"
+	"time"
 
 	"github.com/mmcdole/gofeed"
 )
@@ -13,19 +14,17 @@ type Items []*gofeed.Item
 
 func (p Items) Len() int { return len(p) }
 func (p Items) Less(i, j int) bool {
-	iDate := p[i].PublishedParsed
-	if iDate == nil {
-		iDate = p[i].UpdatedParsed
-	}
-
-	jDate := p[j].PublishedParsed
-	if jDate == nil {
-		jDate = p[j].UpdatedParsed
-	}
-
-	return iDate.After(*jDate)
+	return getItemDate(p[i]).After(*getItemDate(p[j]))
 }
 func (p Items) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
+
+func getItemDate(item *gofeed.Item) *time.Time {
+	if item.PublishedParsed != nil {
+		return item.PublishedParsed
+	}
+
+	return item.UpdatedParsed
+}
 
 func GetItemId(item *gofeed.Item) string {
 	if len(item.GUID) > 0 {

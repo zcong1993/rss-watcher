@@ -82,7 +82,7 @@ func (fs *Store) save() error {
 		return err
 	}
 
-	err = ioutil.WriteFile(tmpF, storeBt, 0644)
+	err = ioutil.WriteFile(tmpF, storeBt, 0600)
 	if err != nil {
 		return err
 	}
