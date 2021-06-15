@@ -9,7 +9,7 @@ import (
 
 var parser = gofeed.NewParser()
 
-// sort items by date desc.
+// Items sort items by date desc.
 type Items []*gofeed.Item
 
 func (p Items) Len() int { return len(p) }
@@ -26,7 +26,7 @@ func getItemDate(item *gofeed.Item) *time.Time {
 	return item.UpdatedParsed
 }
 
-func GetItemId(item *gofeed.Item) string {
+func GetItemID(item *gofeed.Item) string {
 	if len(item.GUID) > 0 {
 		return item.GUID
 	}

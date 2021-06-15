@@ -8,6 +8,8 @@ import (
 	"github.com/zcong1993/notifiers/v2"
 )
 
+// revive:disable:exported
+
 const (
 	Ding     = "ding"
 	Printer  = "printer"

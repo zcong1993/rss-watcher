@@ -81,9 +81,6 @@ linters-settings:
     disable:
       - shadow
     disable-all: false
-  golint:
-    # minimal confidence for issues, default is 0.8
-    min-confidence: 0.8
   gofmt:
     # simplify code: gofmt with `-s` option, true by default
     simplify: true
@@ -236,6 +233,9 @@ linters:
     - gci
     - gofumpt
     - tagliatelle
+    - exhaustivestruct
+    - golint
+    - wrapcheck
 
 issues:
   # List of regexps of issue texts to exclude, empty list by default.
@@ -244,6 +244,8 @@ issues:
   # excluded by default patterns execute `golangci-lint run --help`
   exclude:
     - composite literal uses unkeyed fields
+    - "G501: Blocklisted import crypto/md5: weak cryptographic primitive"
+    - "G401: Use of weak cryptographic primitive"
 
   exclude-rules:
     # Exclude some linters from running on test files.

@@ -107,7 +107,7 @@ func (w *Watcher) handle(ctx context.Context) error {
 		items = append(items, feedItems[0])
 	} else {
 		for i, item := range feedItems {
-			if rss.GetItemId(item) == lastItemID {
+			if rss.GetItemID(item) == lastItemID {
 				break
 			}
 			if i > 4 {
@@ -135,7 +135,7 @@ func (w *Watcher) handle(ctx context.Context) error {
 		}
 	}
 
-	err = w.store.Set(ctx, w.md5URL, rss.GetItemId(items[0]))
+	err = w.store.Set(ctx, w.md5URL, rss.GetItemID(items[0]))
 	if err != nil {
 		w.logger.Errorf("kv store add last item error: %+v", err)
 	}

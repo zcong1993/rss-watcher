@@ -116,7 +116,7 @@ func (f *Store) get(key string) (faunadb.Value, error) {
 		return nil, errors.Wrap(err, "query data")
 	}
 
-	return res, err
+	return res, nil
 }
 
 func (f *Store) Close() error {
