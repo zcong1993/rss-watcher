@@ -4,10 +4,11 @@ import (
 	"os"
 	"time"
 
+	"github.com/spf13/cobra"
+
 	"github.com/pkg/errors"
 
 	"github.com/sirupsen/logrus"
-	"gopkg.in/alecthomas/kingpin.v2"
 )
 
 const (
@@ -90,18 +91,13 @@ func NewLogger(name string, option *Option) (*Logger, error) {
 	return logger, nil
 }
 
-func BindKingpinFlags(app *kingpin.Application) func() *Option {
-	outputLevel := app.Flag("log-level", "Options are debug, info, warn, error, or fatal").Default("info").String()
-	jSONFormatEnabled := app.Flag("log-as-json", "Print log as JSON (default false)").Bool()
-	reportCaller := app.Flag("report-caller", "Printer caller.").Bool()
+func BindCobraFlags(app *cobra.Command) func(name string) (*Logger, error) {
+	var o Option
+	app.PersistentFlags().StringVar(&o.OutputLevel, "log-level", "info", "Options are debug, info, warn, error, or fatal")
+	app.PersistentFlags().BoolVar(&o.JSONFormatEnabled, "log-as-json", false, "Print log as JSON (default false)")
+	app.PersistentFlags().BoolVar(&o.ReportCaller, "report-caller", false, "Printer caller")
 
-	return func() *Option {
-		o := &Option{
-			JSONFormatEnabled: *jSONFormatEnabled,
-			ReportCaller:      *reportCaller,
-			OutputLevel:       *outputLevel,
-		}
-
-		return o
+	return func(name string) (*Logger, error) {
+		return NewLogger(name, &o)
 	}
 }

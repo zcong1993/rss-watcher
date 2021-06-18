@@ -3,19 +3,17 @@ package main
 import (
 	"fmt"
 	"log"
-	"os"
 	"runtime/debug"
+	"time"
 
+	"github.com/spf13/cobra"
 	"github.com/zcong1993/rss-watcher/pkg/logger"
-
 	"github.com/zcong1993/rss-watcher/pkg/notify"
-
 	"github.com/zcong1993/rss-watcher/pkg/runtime"
 	"github.com/zcong1993/rss-watcher/pkg/store"
 	"github.com/zcong1993/rss-watcher/pkg/store/fauna"
 	"github.com/zcong1993/rss-watcher/pkg/store/file"
 	"github.com/zcong1993/rss-watcher/pkg/store/mem"
-	"gopkg.in/alecthomas/kingpin.v2"
 )
 
 // nolint: gochecknoglobals
@@ -26,74 +24,109 @@ var (
 	builtBy = ""
 )
 
-var (
-	app = kingpin.New("rss-watcher", "Watcher rss source and notify new.")
-
-	configFile    = app.Flag("config", "Config file path.").Required().String()
-	limitInterval = app.Flag("limit", "If sleep between notify messages.").Duration()
-
-	singleCmd = app.Command("single", "Run single and exit.")
-	serialize = singleCmd.Flag("serialize", "If run serialize, only work in single mode.").Bool()
-
-	daemonCmd = app.Command("daemon", "Run as daemon.")
-)
-
 func main() {
-	optFn := logger.BindKingpinFlags(app)
+	appName := "rss-watcher"
 
-	app.Version(buildVersion(version, commit, date, builtBy))
-	cmd := kingpin.MustParse(app.Parse(os.Args[1:]))
+	var (
+		configFile    string
+		limitInterval time.Duration
+		serialize     bool
+	)
 
-	l, err := logger.NewLogger("rss-watcher", optFn())
-
-	if err != nil {
-		log.Fatalf("init logger error: %s", err.Error())
+	app := &cobra.Command{
+		Use:     appName,
+		Short:   "Watcher rss source and notify new.",
+		Version: buildVersion(version, commit, date, builtBy),
 	}
 
-	r := runtime.NewRssWatcherRuntime(l)
+	app.PersistentFlags().StringVarP(&configFile, "config", "c", "", "Config file path.")
+	_ = app.MarkPersistentFlagRequired("config")
+	app.PersistentFlags().DurationVarP(&limitInterval, "limit", "l", 0, "If sleep between notify messages.")
+	loggerFactory := logger.BindCobraFlags(app)
 
-	opts := []runtime.Option{
-		runtime.WithLimitInterval(*limitInterval),
-		runtime.WithConfigFile(*configFile),
-		runtime.WithStores(
-			store.New(file.Name, func() store.Store {
-				return file.NewFileStore()
-			}),
-			store.New(mem.Name, func() store.Store {
-				return mem.NewMemStore()
-			}),
-			store.New(fauna.Name, func() store.Store {
-				return fauna.NewFanuaStore()
-			}),
-		),
-		runtime.WithNotifiers(
-			notify.New(notify.Printer, func() notify.Notifier {
-				return notify.NewPrinterNotifier()
-			}),
-			notify.New(notify.Telegram, func() notify.Notifier {
-				return notify.NewTelegramNotifier()
-			}),
-			notify.New(notify.Ding, func() notify.Notifier {
-				return notify.NewDingNotifier()
-			}),
-			notify.New(notify.Mail, func() notify.Notifier {
-				return notify.NewMailerNotifier()
-			}),
-		),
+	var optsFactory = func() []runtime.Option {
+		return []runtime.Option{
+			runtime.WithLimitInterval(limitInterval),
+			runtime.WithConfigFile(configFile),
+			runtime.WithStores(
+				store.New(file.Name, func() store.Store {
+					return file.NewFileStore()
+				}),
+				store.New(mem.Name, func() store.Store {
+					return mem.NewMemStore()
+				}),
+				store.New(fauna.Name, func() store.Store {
+					return fauna.NewFanuaStore()
+				}),
+			),
+			runtime.WithNotifiers(
+				notify.New(notify.Printer, func() notify.Notifier {
+					return notify.NewPrinterNotifier()
+				}),
+				notify.New(notify.Telegram, func() notify.Notifier {
+					return notify.NewTelegramNotifier()
+				}),
+				notify.New(notify.Ding, func() notify.Notifier {
+					return notify.NewDingNotifier()
+				}),
+				notify.New(notify.Mail, func() notify.Notifier {
+					return notify.NewMailerNotifier()
+				}),
+			),
+		}
 	}
 
-	if cmd == singleCmd.FullCommand() {
-		opts = append(opts, runtime.WithSingle(true), runtime.WithSerialize(*serialize))
+	singleCmd := &cobra.Command{
+		Use:   "single",
+		Short: "Run single and exit.",
+		Run: cmdRun(func(cmd *cobra.Command, args []string) error {
+			l, err := loggerFactory(appName)
+			if err != nil {
+				return err
+			}
+
+			r := runtime.NewRssWatcherRuntime(l)
+
+			opts := optsFactory()
+
+			opts = append(opts, runtime.WithSingle(true), runtime.WithSerialize(serialize))
+
+			return r.Run(opts...)
+		}),
 	}
 
-	if cmd == daemonCmd.FullCommand() {
-		l.Info("run as daemon")
+	singleCmd.PersistentFlags().BoolVarP(&serialize, "serialize", "s", false, "If run serialize, only work in single mode.")
+
+	daemonCmd := &cobra.Command{
+		Use:   "daemon",
+		Short: "Run as daemon.",
+		Run: cmdRun(func(cmd *cobra.Command, args []string) error {
+			l, err := loggerFactory(appName)
+			if err != nil {
+				return err
+			}
+
+			l.Info("run as daemon")
+
+			r := runtime.NewRssWatcherRuntime(l)
+
+			return r.Run(optsFactory()...)
+		}),
 	}
 
-	err = r.Run(opts...)
+	app.AddCommand(singleCmd, daemonCmd)
 
-	if err != nil {
-		l.Fatalf("fatal error from runtime: %s", err)
+	if err := app.Execute(); err != nil {
+		log.Fatalf("fatal error: %s", err)
+	}
+}
+
+func cmdRun(f func(cmd *cobra.Command, args []string) error) func(cmd *cobra.Command, args []string) {
+	return func(cmd *cobra.Command, args []string) {
+		err := f(cmd, args)
+		if err != nil {
+			log.Fatalf("fatal error from runtime: %s", err)
+		}
 	}
 }
 

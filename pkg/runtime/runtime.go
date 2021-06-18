@@ -296,8 +296,9 @@ func (r *RssWatcherRuntime) daemon() error {
 			if err != nil {
 				r.logger.Errorf("exit cause: %s", err.Error())
 			}
-
+			r.logger.Debug("close watcher")
 			w.Close()
+			r.logger.Debug("close watcher done")
 		})
 	}
 
@@ -315,6 +316,7 @@ func (r *RssWatcherRuntime) daemon() error {
 			r.logger.Debugf("close store %s", name)
 
 			err := s.Close()
+			r.logger.Debugf("close store done %s", name)
 			if err != nil {
 				r.logger.Errorf("close store name: %s, err: %s", name, err.Error())
 			}
@@ -324,6 +326,8 @@ func (r *RssWatcherRuntime) daemon() error {
 			r.logger.Debugf("close notifier %s", name)
 
 			err := n.Close()
+
+			r.logger.Debugf("close notifier done %s", name)
 			if err != nil {
 				r.logger.Errorf("close notifier name: %s, err: %s", name, err.Error())
 			}
