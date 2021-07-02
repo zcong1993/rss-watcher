@@ -2,6 +2,12 @@
 ## [Unreleased]
 
 
+<a name="v0.21.3"></a>
+## [v0.21.3] - 2021-07-02
+### Chore
+- [43e35f7](https://github.com/zcong1993/rss-watcher/commit/43e35f7ae5fc46f653598dd7bad4ecf0de80d9f5) add changelog
+
+
 <a name="v0.21.2"></a>
 ## [v0.21.2] - 2021-06-18
 ### Chore
@@ -231,7 +237,8 @@
 - [1c99d93](https://github.com/zcong1993/rss-watcher/commit/1c99d93a272d52f5a4253547f631842b6f15be2a) **kv:** fix kv filestore and improve mem kv test
 
 
-[Unreleased]: https://github.com/zcong1993/rss-watcher/compare/v0.21.2...HEAD
+[Unreleased]: https://github.com/zcong1993/rss-watcher/compare/v0.21.3...HEAD
+[v0.21.3]: https://github.com/zcong1993/rss-watcher/compare/v0.21.2...v0.21.3
 [v0.21.2]: https://github.com/zcong1993/rss-watcher/compare/v0.21.1...v0.21.2
 [v0.21.1]: https://github.com/zcong1993/rss-watcher/compare/v0.21.0...v0.21.1
 [v0.21.0]: https://github.com/zcong1993/rss-watcher/compare/v0.20.2...v0.21.0
