@@ -236,6 +236,7 @@ linters:
     - exhaustivestruct
     - golint
     - wrapcheck
+    - paralleltest
 
 issues:
   # List of regexps of issue texts to exclude, empty list by default.

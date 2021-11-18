@@ -147,7 +147,7 @@ func (r *RssWatcherRuntime) loadStore() error {
 				return errors.New("pg_config is required")
 			}
 		default:
-			// should not happen
+			// should not happen.
 			return errors.New("invalid store type")
 		}
 
