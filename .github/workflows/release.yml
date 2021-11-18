@@ -16,6 +16,8 @@ jobs:
           fetch-depth: 0
       - name: Setup git-chglog
         uses: zcong1993/setup-bin@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           name: git-chglog
           repo-full: git-chglog/git-chglog
