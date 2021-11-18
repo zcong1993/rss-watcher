@@ -2,9 +2,20 @@
 ## [Unreleased]
 
 
+<a name="v0.22.0"></a>
+## [v0.22.0] - 2021-11-18
+### Chore
+- [149d918](https://github.com/zcong1993/rss-watcher/commit/149d918a56fb176d9227eb63f36af191400bc29b) tweak ci config
+- [d8eeb6a](https://github.com/zcong1993/rss-watcher/commit/d8eeb6a4164a1e382208c6af14b3e1c89624dfba) tweak ci config
+- [a194d30](https://github.com/zcong1993/rss-watcher/commit/a194d302f4f71db1459b3104965649d18ea2e30a) tweak
+- [b8af142](https://github.com/zcong1993/rss-watcher/commit/b8af142bfe52a6cd6aba2393bcfd4610da1c0569) fix lint
+- [aa8a122](https://github.com/zcong1993/rss-watcher/commit/aa8a12228970e5a41ee544a8a3338a2cb7221e86) add store pg
+
+
 <a name="v0.21.3"></a>
 ## [v0.21.3] - 2021-07-02
 ### Chore
+- [8ea4d53](https://github.com/zcong1993/rss-watcher/commit/8ea4d534dd819aefdd3dbfd500fabdf043d5ee38) update changelog for v0.21.3
 - [43e35f7](https://github.com/zcong1993/rss-watcher/commit/43e35f7ae5fc46f653598dd7bad4ecf0de80d9f5) add changelog
 
 
@@ -237,7 +248,8 @@
 - [1c99d93](https://github.com/zcong1993/rss-watcher/commit/1c99d93a272d52f5a4253547f631842b6f15be2a) **kv:** fix kv filestore and improve mem kv test
 
 
-[Unreleased]: https://github.com/zcong1993/rss-watcher/compare/v0.21.3...HEAD
+[Unreleased]: https://github.com/zcong1993/rss-watcher/compare/v0.22.0...HEAD
+[v0.22.0]: https://github.com/zcong1993/rss-watcher/compare/v0.21.3...v0.22.0
 [v0.21.3]: https://github.com/zcong1993/rss-watcher/compare/v0.21.2...v0.21.3
 [v0.21.2]: https://github.com/zcong1993/rss-watcher/compare/v0.21.1...v0.21.2
 [v0.21.1]: https://github.com/zcong1993/rss-watcher/compare/v0.21.0...v0.21.1
