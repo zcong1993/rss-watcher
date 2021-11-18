@@ -12,7 +12,7 @@ type Store struct {
 	store map[string]string
 }
 
-func NewMemStore() *Store {
+func NewMemStore() store.Store {
 	return &Store{store: make(map[string]string)}
 }
 
@@ -38,5 +38,3 @@ func (ms *Store) Set(_ context.Context, key string, value string) error {
 func (ms *Store) Close() error {
 	return nil
 }
-
-var _ store.Store = (*Store)(nil)

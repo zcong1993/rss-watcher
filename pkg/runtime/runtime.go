@@ -8,6 +8,8 @@ import (
 	"sync"
 	"syscall"
 
+	"github.com/zcong1993/rss-watcher/pkg/store/pg"
+
 	"github.com/zcong1993/rss-watcher/pkg/logger"
 
 	"github.com/oklog/run"
@@ -139,6 +141,14 @@ func (r *RssWatcherRuntime) loadStore() error {
 			if r.config.FaunaConfig == nil {
 				return errors.New("fauna_config is required")
 			}
+		case pg.Name:
+			config = r.config.PgConfig
+			if r.config.PgConfig == nil {
+				return errors.New("pg_config is required")
+			}
+		default:
+			// should not happen
+			return errors.New("invalid store type")
 		}
 
 		err = s.Init(config)

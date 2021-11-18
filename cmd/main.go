@@ -6,6 +6,8 @@ import (
 	"runtime/debug"
 	"time"
 
+	"github.com/zcong1993/rss-watcher/pkg/store/pg"
+
 	"github.com/spf13/cobra"
 	"github.com/zcong1993/rss-watcher/pkg/logger"
 	"github.com/zcong1993/rss-watcher/pkg/notify"
@@ -57,6 +59,9 @@ func main() {
 				}),
 				store.New(fauna.Name, func() store.Store {
 					return fauna.NewFanuaStore()
+				}),
+				store.New(pg.Name, func() store.Store {
+					return pg.NewPg()
 				}),
 			),
 			runtime.WithNotifiers(

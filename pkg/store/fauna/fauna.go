@@ -28,7 +28,7 @@ type Record struct {
 	Value string `fauna:"value"`
 }
 
-func NewFanuaStore() *Store {
+func NewFanuaStore() store.Store {
 	return &Store{}
 }
 
@@ -122,5 +122,3 @@ func (f *Store) get(key string) (faunadb.Value, error) {
 func (f *Store) Close() error {
 	return nil
 }
-
-var _ store.Store = (*Store)(nil)

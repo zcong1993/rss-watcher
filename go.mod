@@ -13,4 +13,6 @@ require (
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.2.0
 	github.com/zcong1993/notifiers/v2 v2.1.0
+	gorm.io/driver/postgres v1.2.2
+	gorm.io/gorm v1.22.3
 )

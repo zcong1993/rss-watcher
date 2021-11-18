@@ -22,7 +22,7 @@ type Config struct {
 	Path string `json:"path" validate:"required"`
 }
 
-func NewFileStore() *Store {
+func NewFileStore() store.Store {
 	return &Store{}
 }
 
@@ -93,5 +93,3 @@ func (fs *Store) save() error {
 func (fs *Store) Close() error {
 	return nil
 }
-
-var _ store.Store = (*Store)(nil)

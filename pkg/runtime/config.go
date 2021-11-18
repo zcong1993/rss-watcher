@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/zcong1993/rss-watcher/pkg/store/pg"
+
 	"github.com/zcong1993/rss-watcher/pkg/notify"
 
 	"github.com/pkg/errors"
@@ -44,11 +46,12 @@ type Config struct {
 	DingConfig          *notify.DingConfig     `json:"ding_config" validate:"omitempty"`
 	MailConfig          *notify.MailConfig     `json:"mail_config" validate:"omitempty"`
 	TelegramConfig      *notify.TelegramConfig `json:"telegram_config" validate:"omitempty"`
-	KvStore             string                 `json:"kv_store" validate:"required,oneof=mem file fauna"`
+	KvStore             string                 `json:"kv_store" validate:"required,oneof=mem file fauna pg"`
 	FileStoreConfigPath string                 `json:"file_store_config_path" validate:"omitempty"`
 	WatcherConfigs      []WatcherConfig        `json:"watcher_configs" validate:"gt=0,dive"`
 	FaunaConfig         *fauna.Config          `json:"fauna_config"`
 	FileConfig          *file.Config           `json:"file_config"`
+	PgConfig            *pg.Config             `json:"pg_config"`
 }
 
 type WatcherConfig struct {
