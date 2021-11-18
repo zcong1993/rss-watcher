@@ -2,11 +2,11 @@ package pg
 
 import (
 	"context"
+	"encoding/json"
 	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/pkg/errors"
-	"github.com/zcong1993/rss-watcher/pkg/store"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -26,11 +26,11 @@ type pg struct {
 type kv struct {
 	Key       string `gorm:"primarykey"`
 	Content   string
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
-func NewPg() store.Store {
+func NewPg() *pg {
 	return &pg{}
 }
 
@@ -89,4 +89,13 @@ func (p *pg) Close() error {
 		return err
 	}
 	return db.Close()
+}
+
+func (p *pg) Import(str string) error {
+	var datas []kv
+	err := json.Unmarshal([]byte(str), &datas)
+	if err != nil {
+		return err
+	}
+	return p.client.Table(p.table).CreateInBatches(datas, 100).Error
 }

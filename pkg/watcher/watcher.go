@@ -93,6 +93,8 @@ func (w *Watcher) handle(ctx context.Context) error {
 		return errors.Wrap(err, "store get")
 	}
 
+	w.logger.Debugf("store get %s %s", w.md5URL, lastItemID)
+
 	isNew := errors.Is(err, store.ErrNotFound)
 
 	if len(feedItems) == 0 {
