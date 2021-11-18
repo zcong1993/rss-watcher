@@ -15,11 +15,13 @@ jobs:
         with:
           fetch-depth: 0
       - name: Setup git-chglog
-        uses: zcong1993/setup-bin@v0.1.0
+        uses: zcong1993/setup-bin@master
         with:
           name: git-chglog
-          bin-version: v0.14.2
-          download-url: https://github.com/git-chglog/git-chglog/releases/download/v0.14.2/git-chglog_0.14.2_linux_amd64.tar.gz
+          repo-full: git-chglog/git-chglog
+          tag-version: latest
+          matcher: linux_amd64.tar.gz$
+          test-cmd: git-chglog --version
       - name: update changelog
         run: |
           git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
