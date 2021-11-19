@@ -74,10 +74,10 @@ func (p *pg) Set(ctx context.Context, key string, value string) error {
 	}
 
 	if res.RowsAffected == 0 {
-		p.client.WithContext(ctx).Table(p.table).Create(&kv{
+		return p.client.WithContext(ctx).Table(p.table).Create(&kv{
 			Key:     key,
 			Content: value,
-		})
+		}).Error
 	}
 
 	return nil
