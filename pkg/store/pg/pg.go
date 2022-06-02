@@ -3,8 +3,9 @@ package pg
 import (
 	"context"
 	"encoding/json"
-	"github.com/zcong1993/rss-watcher/pkg/store"
 	"time"
+
+	"github.com/zcong1993/rss-watcher/pkg/store"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/pkg/errors"
