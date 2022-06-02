@@ -3,6 +3,7 @@ package pg
 import (
 	"context"
 	"encoding/json"
+	"github.com/zcong1993/rss-watcher/pkg/store"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -61,6 +62,9 @@ func (p *pg) Get(ctx context.Context, key string) (string, error) {
 	var res kv
 	err := p.client.WithContext(ctx).Table(p.table).First(&res, "key = ?", key).Error
 	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return "", store.ErrNotFound
+		}
 		return "", err
 	}
 

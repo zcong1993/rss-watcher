@@ -6,8 +6,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// nolint
-var ErrNotFound = errors.New("NotFound")
+var ErrNotFound = errors.New("NotFound") //nolint
 
 type Store interface {
 	Init(cfg interface{}) error
