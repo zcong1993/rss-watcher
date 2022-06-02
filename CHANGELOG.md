@@ -2,9 +2,19 @@
 ## [Unreleased]
 
 
+<a name="v0.22.3"></a>
+## [v0.22.3] - 2022-06-02
+### Chore
+- [60ed82c](https://github.com/zcong1993/rss-watcher/commit/60ed82cbeda6138398f1b71d0077a9f981bb03bf) bump ci deps
+
+### Fix
+- [3bdb71a](https://github.com/zcong1993/rss-watcher/commit/3bdb71ab2eaff3d619b54cc865d1ed206a082e26) pg store not found
+
+
 <a name="v0.22.2"></a>
 ## [v0.22.2] - 2021-11-19
 ### Chore
+- [f495011](https://github.com/zcong1993/rss-watcher/commit/f495011eaaa1e98d0748f40d311e9e817ddf64cf) update changelog for v0.22.2
 - [2d4f48d](https://github.com/zcong1993/rss-watcher/commit/2d4f48dbd3be696927c071ddebb78ef548a32a62) handle pg create error
 
 
@@ -262,7 +272,8 @@
 - [1c99d93](https://github.com/zcong1993/rss-watcher/commit/1c99d93a272d52f5a4253547f631842b6f15be2a) **kv:** fix kv filestore and improve mem kv test
 
 
-[Unreleased]: https://github.com/zcong1993/rss-watcher/compare/v0.22.2...HEAD
+[Unreleased]: https://github.com/zcong1993/rss-watcher/compare/v0.22.3...HEAD
+[v0.22.3]: https://github.com/zcong1993/rss-watcher/compare/v0.22.2...v0.22.3
 [v0.22.2]: https://github.com/zcong1993/rss-watcher/compare/v0.22.1...v0.22.2
 [v0.22.1]: https://github.com/zcong1993/rss-watcher/compare/v0.22.0...v0.22.1
 [v0.22.0]: https://github.com/zcong1993/rss-watcher/compare/v0.21.3...v0.22.0
